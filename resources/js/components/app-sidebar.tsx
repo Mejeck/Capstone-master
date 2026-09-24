@@ -44,12 +44,6 @@ const mainNavItems: NavItem[] = [
         roles: ['Admin', 'SuperAdmin'],
     },
     {
-        title: 'Customer Reports',
-        url: '/admin/customer-reports',
-        icon: FileText,
-        roles: ['Admin', 'SuperAdmin'],
-    },
-    {
         title: 'Suppliers',
         url: '/admin/suppliers',
         icon: CircleDollarSign,
