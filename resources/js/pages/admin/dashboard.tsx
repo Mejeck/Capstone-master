@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Droplets, Package, TrendingUp, AlertTriangle, Users, Activity, BarChart3, ShoppingCart, Truck, Clock, CheckCircle, XCircle, Package as PackageIcon, FileText, Settings, Users as UsersIcon, BarChart3 as ReportsIcon, Plus, XCircle as XCircleIcon, Tag, Ruler, Layers, Check, Edit, Trash2, PlusCircle, Snowflake, Wine, X, RefreshCw } from 'lucide-react';
+import { Droplets, CircleDollarSign, Package, TrendingUp, AlertTriangle, Users, Activity, BarChart3, ShoppingCart, Truck, Clock, CheckCircle, XCircle, Package as PackageIcon, FileText, Settings, Users as UsersIcon, BarChart3 as ReportsIcon, Plus, XCircle as XCircleIcon, Tag, Ruler, Layers, Check, Edit, Trash2, PlusCircle, Snowflake, Wine, X, RefreshCw } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { Head, useForm, router } from '@inertiajs/react';
+import { formatCurrency } from '@/constants/tax';
 
 // PesoSign component drawn as a lucide-style outline icon so it matches the stroke weight
 // of the other icons on this page instead of standing out as a bold filled glyph.
@@ -60,6 +61,13 @@ interface DashboardProps {
         todayOrders: number;
         pendingDeliveries: number;
         recentDamagedBeverages: number;
+    };
+    // All-time takings (confirmed, non-voided sales) — the same figures the
+    // POS screen shows in its Overall Sales banner.
+    overallSales?: {
+        total_sales: number;
+        total_transactions: number;
+        today_sales: number;
     };
     products: Product[];
     categories: Category[];
@@ -126,7 +134,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard({ stats, products = [], categories = [], recentStockLogs, recentOrders, recentDamagedBeverages, lowStockProducts, categoryStats, stockTrends, salesTrends, topProducts, deliveryStats }: DashboardProps) {
+export default function Dashboard({ stats, overallSales, products = [], categories = [], recentStockLogs, recentOrders, recentDamagedBeverages, lowStockProducts, categoryStats, stockTrends, salesTrends, topProducts, deliveryStats }: DashboardProps) {
     const [activeSection, setActiveSection] = useState<string>('dashboard');
     const [showAddStockModal, setShowAddStockModal] = useState(false);
     const [showCreateProductModal, setShowCreateProductModal] = useState(false);
@@ -476,6 +484,39 @@ export default function Dashboard({ stats, products = [], categories = [], recen
             {/* Dashboard Section */}
             {activeSection === 'dashboard' && (
                 <div>
+            {/* Overall Sales — the first thing an admin should see on opening the
+                Dashboard, so the running total doesn't require a trip to POS Sales
+                History. Same figures and treatment as the POS screen's banner. */}
+            <button
+                type="button"
+                onClick={() => router.visit('/admin/pos/history')}
+                className="mb-3 flex w-full flex-col gap-4 rounded-2xl border-2 border-cyan-700/50 bg-gradient-to-br from-cyan-600 to-cyan-800 p-5 text-left text-white shadow-lg transition-shadow hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 sm:flex-row sm:items-center sm:justify-between sm:p-6 dark:border-cyan-800 dark:from-cyan-700 dark:to-cyan-950"
+            >
+                <div>
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-cyan-100">
+                        <CircleDollarSign className="w-4 h-4" /> Overall Sales
+                    </p>
+                    <p className="mt-1 text-3xl font-bold tabular-nums sm:text-4xl">
+                        {formatCurrency(overallSales?.total_sales ?? 0)}
+                    </p>
+                </div>
+                <div className="flex items-center gap-6 sm:gap-8">
+                    <div className="sm:text-right">
+                        <p className="text-xs font-medium text-cyan-100 sm:text-sm">Today</p>
+                        <p className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl">
+                            {formatCurrency(overallSales?.today_sales ?? 0)}
+                        </p>
+                    </div>
+                    <div className="h-10 w-px bg-white/25" aria-hidden="true" />
+                    <div className="sm:text-right">
+                        <p className="text-xs font-medium text-cyan-100 sm:text-sm">Transactions</p>
+                        <p className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl">
+                            {(overallSales?.total_transactions ?? 0).toLocaleString()}
+                        </p>
+                    </div>
+                </div>
+            </button>
+
             {/* Stats Cards — primary tier: the state-of-the-business numbers */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                 {primaryCards.map((card) => {

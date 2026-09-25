@@ -82,6 +82,30 @@ class Sale extends Model
         return $query->whereDate('sale_date', today());
     }
 
+    /**
+     * Sales that count as real income: a 'pending' one hasn't actually been
+     * paid yet and a voided one was reversed. Same definition every other
+     * revenue figure uses (see DashboardController::buildSalesReport).
+     */
+    public function scopeRevenue($query)
+    {
+        return $query->where('payment_status', 'confirmed')->whereNull('voided_at');
+    }
+
+    /**
+     * All-time takings across every cashier and admin, shown on the admin
+     * Dashboard and on the POS screen so the overall figure is visible
+     * without opening Sales History.
+     */
+    public static function overallSummary(): array
+    {
+        return [
+            'total_sales' => (float) static::revenue()->sum('total_amount'),
+            'total_transactions' => static::revenue()->count(),
+            'today_sales' => (float) static::revenue()->today()->sum('total_amount'),
+        ];
+    }
+
     public function scopeThisWeek($query)
     {
         return $query->whereBetween('sale_date', [now()->startOfWeek(), now()->endOfWeek()]);

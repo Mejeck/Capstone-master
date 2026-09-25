@@ -25,7 +25,19 @@ class POSController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('admin/pos', $this->getPOSViewData());
+        return Inertia::render('admin/pos', array_merge(
+            $this->getPOSViewData(),
+            ['overall_sales' => Sale::overallSummary()]
+        ));
+    }
+
+    /**
+     * Same totals as a JSON endpoint, so the POS screen can refresh them
+     * after a sale or a void without a full page reload.
+     */
+    public function salesSummary(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(Sale::overallSummary());
     }
 
     /**
@@ -49,9 +61,12 @@ class POSController extends Controller
 
         // Grand total across every matching sale, not just the 15 on the
         // current page — cloned before pagination narrows $query down to one
-        // page. Voided sales are excluded, same as every other revenue total
-        // in the app (see CashierController::voidSale).
-        $summaryQuery = (clone $query)->whereNull('voided_at');
+        // page. Only confirmed, non-voided sales count, the same definition
+        // the Dashboard and POS banners use (Sale::scopeRevenue): a rejected
+        // payment never became income and a voided sale was reversed. The
+        // table below still lists both, labelled — it's only this headline
+        // figure that's filtered.
+        $summaryQuery = (clone $query)->revenue();
         $summary = [
             'total_sales' => (float) (clone $summaryQuery)->sum('total_amount'),
             'total_transactions' => (clone $summaryQuery)->count(),

@@ -22,7 +22,8 @@ import {
     History,
     Trash2,
     Keyboard,
-    Ban
+    Ban,
+    TrendingUp
 } from 'lucide-react';
 import { TAX_CONSTANTS, formatCurrency } from '@/constants/tax';
 
@@ -58,6 +59,15 @@ interface CartItem {
     is_cold?: boolean;
 }
 
+// All-time POS totals shown on the register screen, so the admin can see
+// overall sales without opening Sales History. Voided sales are excluded
+// server-side (POSController::overallSalesSummary).
+interface OverallSales {
+    total_sales: number;
+    total_transactions: number;
+    today_sales: number;
+}
+
 interface PaymentMethod {
     id: string;
     name: string;
@@ -84,12 +94,15 @@ const KEEP_ALIVE_INTERVAL_MS = 10 * 60 * 1000;
 // enforces the column's real limit as a hard backstop.
 const MAX_CASH_RECEIVED = 1_000_000;
 
-export default function POS() {
+export default function POS({ overall_sales }: { overall_sales?: OverallSales }) {
     const cartRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const cashInputRef = useRef<HTMLInputElement>(null);
     const gcashInputRef = useRef<HTMLInputElement>(null);
     const [products, setProducts] = useState<Product[]>([]);
+    const [overallSales, setOverallSales] = useState<OverallSales>(
+        overall_sales ?? { total_sales: 0, total_transactions: 0, today_sales: 0 }
+    );
     // Restores a cart stashed by handleSessionExpired just before a reload,
     // so an order in progress survives having to log back in.
     const [cart, setCart] = useState<CartItem[]>(() => {
@@ -181,6 +194,25 @@ export default function POS() {
         } catch (error) {
             console.error('Failed to load POS products:', error);
             setProducts([]);
+        }
+    };
+
+    // Re-read the overall totals after anything that changes them (a
+    // completed sale, a void), so the header stays correct without a reload.
+    const fetchOverallSales = async () => {
+        try {
+            const response = await fetch('/admin/api/pos/summary', {
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            setOverallSales(await response.json());
+        } catch (error) {
+            console.error('Failed to load overall sales:', error);
         }
     };
 
@@ -366,6 +398,7 @@ export default function POS() {
                 setShowReceipt(true);
                 setCart([]);
                 setCashReceived('');
+                fetchOverallSales();
             } else {
                 alert('Error processing sale: ' + result.message);
             }
@@ -432,6 +465,7 @@ export default function POS() {
                 setCashReceived('');
                 setGcashPaymentProof('');
                 setGcashTransactionId('');
+                fetchOverallSales();
             } else {
                 alert('Error processing sale: ' + result.message);
             }
@@ -481,6 +515,7 @@ export default function POS() {
                 setVoidReason('');
                 setVoidReasonPreset('');
                 fetchProducts();
+                fetchOverallSales();
                 showToast('success', 'Sale voided. Stock has been restored.');
             } else {
                 showToast('error', result.message || 'Could not void this sale.');
@@ -707,6 +742,30 @@ export default function POS() {
                                 <div className="text-sm text-gray-600 dark:text-gray-400">Current Time</div>
                                 <div className="text-lg font-semibold">{new Date().toLocaleTimeString()}</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Overall take, so the admin doesn't have to open Sales History just to
+                    see where total sales stand. Same hero treatment as the Total Sales
+                    banner on the cashier dashboard, with today's figure and the
+                    transaction count broken out beside it. */}
+                <div className="mb-6 flex flex-col gap-4 rounded-2xl border-2 border-cyan-700/50 bg-gradient-to-br from-cyan-600 to-cyan-800 p-5 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between sm:p-6 dark:border-cyan-800 dark:from-cyan-700 dark:to-cyan-950">
+                    <div>
+                        <p className="flex items-center gap-1.5 text-sm font-medium text-cyan-100">
+                            <TrendingUp className="w-4 h-4" /> Overall Sales
+                        </p>
+                        <p className="mt-1 text-3xl font-bold sm:text-4xl">{formatCurrency(overallSales.total_sales)}</p>
+                    </div>
+                    <div className="flex items-center gap-6 sm:gap-8">
+                        <div className="sm:text-right">
+                            <p className="text-xs font-medium text-cyan-100 sm:text-sm">Today</p>
+                            <p className="mt-1 text-xl font-semibold sm:text-2xl">{formatCurrency(overallSales.today_sales)}</p>
+                        </div>
+                        <div className="h-10 w-px bg-white/25" aria-hidden="true" />
+                        <div className="sm:text-right">
+                            <p className="text-xs font-medium text-cyan-100 sm:text-sm">Transactions</p>
+                            <p className="mt-1 text-xl font-semibold sm:text-2xl">{overallSales.total_transactions.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>

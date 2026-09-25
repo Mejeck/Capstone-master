@@ -178,6 +178,9 @@ class DashboardController extends Controller
                 'pendingDeliveries' => $pendingDeliveries,
                 'recentDamagedBeverages' => BrokenBottle::whereDate('report_date', today())->count(),
             ],
+            // All-time takings, so the admin sees where sales stand without
+            // opening POS Sales History or the Reports page.
+            'overallSales' => Sale::overallSummary(),
             'recentStockLogs' => $recentStockLogs,
             'recentOrders' => $recentOrders,
             'recentDamagedBeverages' => $recentDamagedBeverages,

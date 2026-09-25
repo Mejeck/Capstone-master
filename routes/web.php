@@ -222,6 +222,9 @@ Route::middleware(['auth'])->group(function () {
         // Complete sales history across every cashier/admin account, not
         // just the currently logged-in user (unlike cashier.sales-history).
         Route::get('pos/history', [POSController::class, 'history'])->name('admin.pos.history');
+        // Overall (all-time) POS sales totals, refreshed by the POS screen
+        // after a sale or a void without reloading the whole page.
+        Route::get('api/pos/summary', [POSController::class, 'salesSummary'])->name('admin.api.pos.summary');
 
         // Payment confirmation API routes
         Route::middleware(['web'])->group(function () {
