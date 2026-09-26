@@ -220,9 +220,22 @@ export default function CustomerNav({ currentPage }: CustomerNavProps) {
             </header>
 
             {/* ═══════════════ MOBILE TOP BAR (<md) ═══════════════ */}
-            <header className="md:hidden bg-slate-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm">
-                <div className="flex items-center justify-end px-4 h-14">
-                    <div className="flex items-center gap-3">
+            <header className="md:hidden sticky top-0 z-40 bg-slate-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm">
+                <div className="flex items-center justify-between px-4 h-14">
+                    {/* Branding, mirroring the desktop header above — without it
+                        the bar is empty apart from the two icons on the right. */}
+                    <Link href="/customer/dashboard" className="flex items-center gap-2 min-w-0">
+                        <img
+                            src="/images/LOGO.jpg"
+                            alt="Mejeck Ice Plant Logo"
+                            className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                        />
+                        <span className="text-base font-bold text-gray-900 dark:text-white truncate">
+                            Mejeck Ice Plant
+                        </span>
+                    </Link>
+
+                    <div className="flex items-center gap-3 flex-shrink-0">
                         <AppearanceToggleDropdown />
                         <Link
                             href="/customer/cart"
