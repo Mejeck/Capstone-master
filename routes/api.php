@@ -20,6 +20,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/check-username', [UserController::class, 'checkUsernameAvailability']);
 
+// Throttled: this answers "is this number registered?" to anyone who asks,
+// so it must not be usable to walk through a range of numbers at speed.
+Route::get('/check-contact', [UserController::class, 'checkContactAvailability'])
+    ->middleware('throttle:30,1');
+
 // Vercel has no artisan scheduler daemon; Vercel Cron (see vercel.json) calls
 // this instead of `gcash:cancel-expired` in routes/console.php. The command only
 // looks at "rejected more than 24h ago", so it is safe to run at any time.

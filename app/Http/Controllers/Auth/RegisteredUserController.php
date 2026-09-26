@@ -66,7 +66,13 @@ class RegisteredUserController extends Controller
             'username' => 'required|string|min:3|max:50|unique:users,username|regex:/^[a-zA-Z0-9_]+$/',
             'full_name' => 'required|string|max:100',
             'email' => 'required|string|lowercase|email|max:100|unique:users,email',
-            'contact_number' => 'nullable|string|max:13|regex:/^\+639\d{9}$/',
+            'contact_number' => [
+                'nullable',
+                'string',
+                'max:13',
+                'regex:/^\+639\d{9}$/',
+                'unique:users,contact_number',
+            ],
             'birthdate' => [
                 'required',
                 'date',
@@ -85,6 +91,7 @@ class RegisteredUserController extends Controller
         ], [
             'username.regex' => 'Username can only contain letters, numbers, and underscores.',
             'contact_number.regex' => 'Contact number must be 10 digits after +63, starting with 9.',
+            'contact_number.unique' => 'This contact number is already registered to another account.',
             'birthdate.before_or_equal' => 'You must be at least ' . User::MINIMUM_SIGNUP_AGE . ' years old to create an account.',
             'birthdate.after_or_equal' => 'Please enter a valid birthdate.',
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&.).',

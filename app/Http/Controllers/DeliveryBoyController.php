@@ -293,9 +293,16 @@ class DeliveryBoyController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
-            'contact_number' => 'nullable|string|max:13|regex:/^\+639\d{9}$/',
+            'contact_number' => [
+                'nullable',
+                'string',
+                'max:13',
+                'regex:/^\+639\d{9}$/',
+                'unique:users,contact_number,' . Auth::id(),
+            ],
         ], [
             'contact_number.regex' => 'Contact number must be 10 digits after +63, starting with 9.',
+            'contact_number.unique' => 'This contact number is already registered to another account.',
         ]);
 
         $user = Auth::user();

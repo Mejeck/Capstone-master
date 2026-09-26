@@ -94,7 +94,13 @@ class StaffAccountController extends Controller
             'username' => 'required|string|min:3|max:50|unique:users,username|regex:/^[a-zA-Z0-9_]+$/',
             'full_name' => 'required|string|max:100',
             'email' => 'required|string|lowercase|email|max:100|unique:users,email',
-            'contact_number' => 'nullable|string|max:13|regex:/^\+639\d{9}$/',
+            'contact_number' => [
+                'nullable',
+                'string',
+                'max:13',
+                'regex:/^\+639\d{9}$/',
+                'unique:users,contact_number',
+            ],
             'role' => ['required', Rule::in($allowedRoles)],
             'password' => [
                 'required',
@@ -108,6 +114,7 @@ class StaffAccountController extends Controller
         ], [
             'username.regex' => 'Username can only contain letters, numbers, and underscores.',
             'contact_number.regex' => 'Contact number must be 10 digits after +63, starting with 9.',
+            'contact_number.unique' => 'This contact number is already registered to another account.',
             'role.in' => 'You are not allowed to assign that role.',
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&.).',
             'password.confirmed' => 'The password confirmation does not match.',
