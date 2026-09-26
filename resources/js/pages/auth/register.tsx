@@ -16,6 +16,7 @@ import UsernameAvailability from '@/components/username-availability';
 import PasswordConfirmationCheck from '@/components/password-confirmation-check';
 import OtpVerificationModal from '@/components/otp-verification-modal';
 import ContactAvailability from '@/components/contact-availability';
+import EmailAvailability from '@/components/email-availability';
 import { EARLIEST_BIRTHDATE, MINIMUM_SIGNUP_AGE, latestAllowedBirthdate } from '@/lib/birthdate';
 
 interface RegisterForm {
@@ -153,6 +154,7 @@ export default function Register() {
                             className="border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/20 dark:border-cyan-700 dark:focus:border-cyan-400 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm"
                         />
                         <InputError message={errors.email} />
+                        <EmailAvailability email={data.email} />
                     </div>
 
                     <div className="grid gap-3">

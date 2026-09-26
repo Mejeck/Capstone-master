@@ -59,4 +59,32 @@ class UserController extends Controller
                 : 'Contact number is available',
         ]);
     }
+
+    /**
+     * Check if an email address is free to register.
+     *
+     * The registration form already reports a duplicate address once it
+     * is submitted, so this tells a visitor nothing new — only sooner,
+     * before they ask for an OTP they would have wasted.
+     */
+    public function checkEmailAvailability(Request $request): JsonResponse
+    {
+        $email = (string) $request->get('email');
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Enter a complete email address.',
+            ]);
+        }
+
+        $exists = User::where('email', $email)->exists();
+
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists
+                ? 'This email already has an account'
+                : 'Email address is available',
+        ]);
+    }
 }

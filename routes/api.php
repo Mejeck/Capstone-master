@@ -25,6 +25,11 @@ Route::get('/check-username', [UserController::class, 'checkUsernameAvailability
 Route::get('/check-contact', [UserController::class, 'checkContactAvailability'])
     ->middleware('throttle:30,1');
 
+// Throttled for the same reason as the one above: it reports whether an
+// address is registered, which must not be answerable in bulk.
+Route::get('/check-email', [UserController::class, 'checkEmailAvailability'])
+    ->middleware('throttle:30,1');
+
 // Vercel has no artisan scheduler daemon; Vercel Cron (see vercel.json) calls
 // this instead of `gcash:cancel-expired` in routes/console.php. The command only
 // looks at "rejected more than 24h ago", so it is safe to run at any time.

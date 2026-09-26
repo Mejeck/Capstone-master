@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\RecaptchaVerifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,6 +33,20 @@ class EmailVerificationController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'We could not verify this request. Please refresh the page and try again.',
+                ], 422);
+            }
+
+            // An address that already has an account has nothing to
+            // verify: the registration request refuses it at the end
+            // anyway, by which point a code has been mailed to somebody
+            // else's inbox and the visitor has typed it back in for
+            // nothing. Checked after reCAPTCHA on purpose, so this
+            // cannot be used to find out which addresses are registered
+            // without solving one first.
+            if (User::where('email', $request->email)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This email address is already registered. Try logging in instead.',
                 ], 422);
             }
 
