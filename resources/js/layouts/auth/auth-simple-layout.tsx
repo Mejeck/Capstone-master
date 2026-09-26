@@ -28,8 +28,8 @@ export default function AuthSimpleLayout({ children, title, backButton }: AuthLa
                 <div className="absolute top-60 left-1/2 w-2 h-2 bg-cyan-300/60 rounded-full animate-bounce delay-800"></div>
             </div>
 
-            <div className="relative z-10 w-full max-w-md mx-auto p-6">
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-slate-700/20 p-8">
+            <div className="relative z-10 flex max-h-svh w-full max-w-md mx-auto flex-col p-6">
+                <div className="min-h-0 overflow-y-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-slate-700/20 p-8">
                     <div className="flex flex-col gap-8">
                         <div className="flex flex-col items-center gap-4">
                             <div className="flex items-center justify-between w-full">
@@ -62,7 +62,7 @@ export default function AuthSimpleLayout({ children, title, backButton }: AuthLa
                 </div>
 
                 {/* Footer */}
-                <div className="text-center mt-6 text-slate-500 dark:text-slate-400 text-xs">
+                <div className="flex-shrink-0 text-center mt-6 text-slate-500 dark:text-slate-400 text-xs">
                     <p>© {new Date().getFullYear()} Mejeck IcePlant. Delivering quality ice solutions.</p>
                 </div>
             </div>
