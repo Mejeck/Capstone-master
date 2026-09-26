@@ -598,7 +598,7 @@ class CustomerController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
             'contact_number' => [
-                'nullable',
+                'required',
                 'string',
                 'max:13',
                 'regex:/^\+639\d{9}$/',
@@ -611,6 +611,7 @@ class CustomerController extends Controller
                 'after_or_equal:' . User::EARLIEST_BIRTHDATE,
             ],
         ], [
+            'contact_number.required' => 'Contact number is required — the delivery rider has no other way to reach you.',
             'contact_number.regex' => 'Contact number must be 10 digits after +63, starting with 9.',
             'contact_number.unique' => 'This contact number is already registered to another account.',
             'birthdate.before_or_equal' => 'You must be at least ' . User::MINIMUM_SIGNUP_AGE . ' years old.',

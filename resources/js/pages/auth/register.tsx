@@ -51,6 +51,7 @@ export default function Register() {
             username: 'Username is required.',
             full_name: 'Full name is required.',
             email: 'Email address is required.',
+            contact_number: 'Contact number is required.',
             birthdate: 'Birthdate is required.',
             password: 'Password is required.',
             password_confirmation: 'Please confirm your password.',
@@ -61,6 +62,13 @@ export default function Register() {
                 fieldErrors[field] = fieldLabels[field as string];
             }
         }
+        // A half-typed number is not empty, so the loop above lets it
+        // through — and the customer would only find out after sitting
+        // through the email OTP step. Check the shape here instead.
+        if (data.contact_number && !/^\+639\d{9}$/.test(data.contact_number)) {
+            fieldErrors.contact_number = 'Contact number must be 10 digits after +63, starting with 9.';
+        }
+
         if (Object.keys(fieldErrors).length > 0) {
             setError(fieldErrors as any);
             return;

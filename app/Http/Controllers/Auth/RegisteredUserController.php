@@ -67,7 +67,7 @@ class RegisteredUserController extends Controller
             'full_name' => 'required|string|max:100',
             'email' => 'required|string|lowercase|email|max:100|unique:users,email',
             'contact_number' => [
-                'nullable',
+                'required',
                 'string',
                 'max:13',
                 'regex:/^\+639\d{9}$/',
@@ -90,6 +90,7 @@ class RegisteredUserController extends Controller
             ],
         ], [
             'username.regex' => 'Username can only contain letters, numbers, and underscores.',
+            'contact_number.required' => 'Contact number is required — the delivery rider has no other way to reach you.',
             'contact_number.regex' => 'Contact number must be 10 digits after +63, starting with 9.',
             'contact_number.unique' => 'This contact number is already registered to another account.',
             'birthdate.before_or_equal' => 'You must be at least ' . User::MINIMUM_SIGNUP_AGE . ' years old to create an account.',
