@@ -74,7 +74,8 @@ export default function GCashProofModal({ open, order, onClose, onDone }: GCashP
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
                     {/* Header */}
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">GCash Payment</h2>
                         {step !== 'upload' && (
                             <button
                                 onClick={onClose}
@@ -84,7 +85,6 @@ export default function GCashProofModal({ open, order, onClose, onDone }: GCashP
                                 <X className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                             </button>
                         )}
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">GCash Payment</h2>
                     </div>
 
                     {/* Order amount pill */}

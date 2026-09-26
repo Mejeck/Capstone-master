@@ -1087,7 +1087,8 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6 pb-8">
-                            <div className="flex items-center gap-3 mb-6">
+                            <div className="flex items-center justify-between gap-3 mb-6">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Complete Your Order</h2>
                                 <button
                                     onClick={() => { setShowOrderModal(false); }}
                                     aria-label="Close"
@@ -1095,7 +1096,6 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                                 >
                                     <X className="w-7 h-7 text-gray-600 dark:text-gray-300" />
                                 </button>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Complete Your Order</h2>
                             </div>
 
                             <div className="space-y-6">
@@ -1165,7 +1165,8 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6 pb-8">
-                            <div className="flex items-center gap-3 mb-6">
+                            <div className="flex items-center justify-between gap-3 mb-6">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Checkout Pre-Order #{selectedPreOrder.order_id}</h2>
                                 <button
                                     onClick={() => {
                                         setShowCheckoutModal(false);
@@ -1176,7 +1177,6 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                                 >
                                     <X className="w-7 h-7 text-gray-600 dark:text-gray-300" />
                                 </button>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Checkout Pre-Order #{selectedPreOrder.order_id}</h2>
                             </div>
 
                             <div className="space-y-6">
@@ -1303,7 +1303,8 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full">
                         <div className="p-6">
-                            <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center justify-between gap-3 mb-4">
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Resubmit Payment Proof</h2>
                                 {!resubmitUploading && (
                                     <button
                                         onClick={() => { setShowResubmitModal(false); setResubmitOrder(null); setResubmitScreenshot(null); setResubmitDone(false); }}
@@ -1313,7 +1314,6 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                                         <X className="w-6 h-6 text-gray-500 dark:text-gray-400" />
                                     </button>
                                 )}
-                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Resubmit Payment Proof</h2>
                             </div>
 
                             {!resubmitDone ? (

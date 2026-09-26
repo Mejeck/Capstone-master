@@ -58,7 +58,8 @@ export default function CodProofModal({ open, order, onClose, onDone }: CodProof
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Down Payment Proof</h2>
                         <button
                             onClick={onClose}
                             aria-label="Close"
@@ -66,7 +67,6 @@ export default function CodProofModal({ open, order, onClose, onDone }: CodProof
                         >
                             <X className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                         </button>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Down Payment Proof</h2>
                     </div>
 
                     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-5 flex justify-between items-center">

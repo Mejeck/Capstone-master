@@ -19,7 +19,8 @@ export default function PreOrdersModal<T extends PreOrderSummary>({ open, onClos
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
-                    <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center justify-between gap-3 mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Pre-Orders</h2>
                         <button
                             onClick={onClose}
                             aria-label="Close"
@@ -27,7 +28,6 @@ export default function PreOrdersModal<T extends PreOrderSummary>({ open, onClos
                         >
                             <X className="w-7 h-7 text-gray-600 dark:text-gray-300" />
                         </button>
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Pre-Orders</h2>
                     </div>
 
                     {preOrders.length === 0 ? (

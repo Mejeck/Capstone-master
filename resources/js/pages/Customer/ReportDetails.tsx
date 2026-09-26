@@ -405,7 +405,10 @@ export default function ReportDetails({ report }: ReportDetailsProps) {
                 {selectedMedia && (
                     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
                         <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl max-h-[90vh] overflow-hidden">
-                            <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
+                                <h3 className="min-w-0 truncate text-lg font-semibold text-gray-900 dark:text-white">
+                                    {selectedMedia.original_name}
+                                </h3>
                                 <button
                                     onClick={() => setSelectedMedia(null)}
                                     aria-label="Close"
@@ -413,9 +416,6 @@ export default function ReportDetails({ report }: ReportDetailsProps) {
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                    {selectedMedia.original_name}
-                                </h3>
                             </div>
                             <div className="p-4">
                                 {selectedMedia.file_type === 'image' ? (
