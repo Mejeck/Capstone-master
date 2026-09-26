@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import RecaptchaCheckbox, { RecaptchaCheckboxHandle } from '@/components/recaptcha-checkbox';
+import { showToast } from '@/lib/toast';
 import { RECAPTCHA_SITE_KEY } from '@/lib/recaptcha';
 
 interface OtpVerificationModalProps {
@@ -50,7 +51,7 @@ export default function OtpVerificationModal({
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
             if (!csrfToken) {
-                setError('CSRF token not found. Please refresh the page.');
+                showToast('error', 'CSRF token not found. Please refresh the page.');
                 return;
             }
 
@@ -67,7 +68,7 @@ export default function OtpVerificationModal({
             recaptchaRef.current?.reset();
 
             if (!response.ok) {
-                setError('Server error. Please try again.');
+                showToast('error', 'Server error. Please try again.');
                 return;
             }
 
@@ -76,11 +77,12 @@ export default function OtpVerificationModal({
             if (data.success) {
                 setOtpSent(true);
                 setError('');
+                showToast('success', `We sent a 6-digit code to ${email}.`);
             } else {
-                setError(data.message || 'Failed to send OTP. Please try again.');
+                showToast('error', data.message || 'Failed to send OTP. Please try again.');
             }
         } catch (err) {
-            setError('Network error. Please check your connection.');
+            showToast('error', 'Network error. Please check your connection.');
         } finally {
             setSendingOtp(false);
         }
