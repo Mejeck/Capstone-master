@@ -20,19 +20,25 @@ class AddColdBeveragePricingSeeder extends Seeder
 {
     public function run(): void
     {
-        // [product_name => [regular case price, cold case price]]
+        // Red Horse exists under two names: IcePlantSeeder creates it as
+        // 'Redhorse Beer' and AddBeerProductsSeeder as 'Red Horse', and
+        // both run from DatabaseSeeder — so both rows can be in the
+        // database. Price every name a product is known by, or the row
+        // this seeder misses keeps a null cold price and never offers
+        // the option to the customer.
+        // [[names...], regular case price, cold case price]
         $pricing = [
-            'Redhorse Beer'  => [750.00, 770.00],
-            'San Mig Light'  => [1250.00, 1300.00],
-            'San Mig Pilsen' => [1100.00, 1150.00],
-            'San Mig Apple'  => [1050.00, 1100.00],
+            [['Redhorse Beer', 'Red Horse'], 750.00, 770.00],
+            [['San Mig Light'], 1250.00, 1300.00],
+            [['San Mig Pilsen'], 1100.00, 1150.00],
+            [['San Mig Apple'], 1050.00, 1100.00],
         ];
 
-        foreach ($pricing as $productName => [$regular, $cold]) {
-            $products = Product::where('product_name', $productName)->get();
+        foreach ($pricing as [$names, $regular, $cold]) {
+            $products = Product::whereIn('product_name', $names)->get();
 
             if ($products->isEmpty()) {
-                echo "! No product found named '{$productName}', skipped.\n";
+                echo "! No product found named '" . implode("' or '", $names) . "', skipped.\n";
                 continue;
             }
 
@@ -42,7 +48,7 @@ class AddColdBeveragePricingSeeder extends Seeder
                 $product->price_per_case_cold = $cold;
                 $product->save();
 
-                echo "✓ {$productName} (ID {$product->product_id}): regular case ₱{$regular}, cold case ₱{$cold}\n";
+                echo "✓ {$product->product_name} (ID {$product->product_id}): regular case ₱{$regular}, cold case ₱{$cold}\n";
             }
         }
     }

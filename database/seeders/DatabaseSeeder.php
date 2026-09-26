@@ -38,6 +38,12 @@ class DatabaseSeeder extends Seeder
         // Call the AddBeerProductsSeeder to add beer products
         $this->call(AddBeerProductsSeeder::class);
 
+        // Must run after the two seeders above: both write price_per_case as
+        // the *cold* price and neither sets price_per_case_cold, so without
+        // this last pass a re-seed leaves the regular and cold case prices
+        // identical — the cold option then costs the customer nothing extra.
+        $this->call(AddColdBeveragePricingSeeder::class);
+
         // Call the AddInitialStocksSeeder to add initial stock quantities
         $this->call(AddInitialStocksSeeder::class);
 
