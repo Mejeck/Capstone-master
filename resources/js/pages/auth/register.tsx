@@ -15,6 +15,7 @@ import PasswordStrengthIndicator from '@/components/password-strength-indicator'
 import UsernameAvailability from '@/components/username-availability';
 import PasswordConfirmationCheck from '@/components/password-confirmation-check';
 import OtpVerificationModal from '@/components/otp-verification-modal';
+import { EARLIEST_BIRTHDATE, MINIMUM_SIGNUP_AGE, latestAllowedBirthdate } from '@/lib/birthdate';
 
 interface RegisterForm {
     username: string;
@@ -175,8 +176,8 @@ export default function Register() {
                             required
                             tabIndex={5}
                             autoComplete="bday"
-                            min="1900-01-01"
-                            max={new Date().toISOString().split('T')[0]}
+                            min={EARLIEST_BIRTHDATE}
+                            max={latestAllowedBirthdate()}
                             value={data.birthdate}
                             onChange={(e) => setData('birthdate', e.target.value)}
                             disabled={processing}
@@ -184,7 +185,8 @@ export default function Register() {
                         />
                         <InputError message={errors.birthdate} />
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                            You must be 18 or older to order beverages. We ask this so we can enforce that at checkout.
+                            You must be at least {MINIMUM_SIGNUP_AGE} to create an account, and 18 or older to order
+                            beverages. We ask this so we can enforce that at checkout.
                         </p>
                     </div>
 

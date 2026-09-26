@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Customer;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Category;
@@ -597,9 +598,16 @@ class CustomerController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
             'contact_number' => 'nullable|string|max:13|regex:/^\+639\d{9}$/',
-            'birthdate' => 'nullable|date|before:today',
+            'birthdate' => [
+                'nullable',
+                'date',
+                'before_or_equal:' . now()->subYears(User::MINIMUM_SIGNUP_AGE)->toDateString(),
+                'after_or_equal:' . User::EARLIEST_BIRTHDATE,
+            ],
         ], [
             'contact_number.regex' => 'Contact number must be 10 digits after +63, starting with 9.',
+            'birthdate.before_or_equal' => 'You must be at least ' . User::MINIMUM_SIGNUP_AGE . ' years old.',
+            'birthdate.after_or_equal' => 'Please enter a valid birthdate.',
         ]);
 
         $user = Auth::user();

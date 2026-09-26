@@ -19,6 +19,22 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, \Illuminate\Auth\MustVerifyEmail;
 
+    /**
+     * Age limits for a birthdate a customer types in themselves.
+     *
+     * MINIMUM_SIGNUP_AGE is the floor for holding an account at all. It is
+     * deliberately lower than the beverage age: minors can buy ice, and only
+     * beverages are gated, by is_adult (18) further down this class.
+     *
+     * EARLIEST_BIRTHDATE matches what the date pickers already offer and
+     * rejects a mistyped year such as 1899 for 1989. Birthdate is write-once
+     * (see CustomerController::updateProfile), and no screen lets an admin
+     * correct one, so a typo that gets saved can never be undone by the
+     * customer. Catching it at entry is the only chance.
+     */
+    public const MINIMUM_SIGNUP_AGE = 13;
+    public const EARLIEST_BIRTHDATE = '1900-01-01';
+
     
     /**
      * The attributes that are mass assignable.

@@ -9,6 +9,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { MUNICIPALITIES } from '@/constants/municipalities';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { EARLIEST_BIRTHDATE, latestAllowedBirthdate } from '@/lib/birthdate';
 
 const PASSWORD_RULES = {
     minLength: 8,
@@ -300,7 +301,8 @@ export default function CustomerSettings({ addresses = [] }: { addresses?: UserA
                                     )}
                                     <input
                                         type="date"
-                                        max={new Date().toISOString().split('T')[0]}
+                                        min={EARLIEST_BIRTHDATE}
+                                        max={latestAllowedBirthdate()}
                                         value={profileForm.data.birthdate}
                                         onChange={(e) => profileForm.setData('birthdate', e.target.value)}
                                         disabled={birthdateLocked}
