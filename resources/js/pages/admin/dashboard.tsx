@@ -38,6 +38,7 @@ interface Product {
     unit: string;
     price: number;
     price_per_case: number | null;
+    price_per_case_cold: number | null;
     price_per_bottle: number | null;
     current_quantity: number;
     min_stock_level: number;
@@ -241,6 +242,7 @@ export default function Dashboard({ stats, overallSales, products = [], categori
         unit: 'case',
         price: '',
         price_per_case: '',
+        price_per_case_cold: '',
         price_per_bottle: '',
         initial_quantity: '',
         min_stock_level: '',
@@ -1038,21 +1040,22 @@ export default function Dashboard({ stats, overallSales, products = [], categori
                             <table className="w-full">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-700/50 text-amber-700 dark:text-amber-300 border-b-2 border-amber-500">
-                                        <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '20%'}}>Product</th>
-                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '10%'}}>Category</th>
-                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '7%'}}>Unit</th>
-                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '12%'}}>Price/Case</th>
-                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '12%'}}>Price/Bottle</th>
-                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '10%'}}>Quantity</th>
-                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '10%'}}>Min Stock</th>
-                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '9%'}}>Status</th>
-                                        <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '20%'}}>Actions</th>
+                                        <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '18%'}}>Product</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '9%'}}>Category</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '6%'}}>Unit</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '11%'}}>Price/Case</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '11%'}}>Case (Cold)</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '11%'}}>Price/Bottle</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '9%'}}>Quantity</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '9%'}}>Min Stock</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '8%'}}>Status</th>
+                                        <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider" style={{width: '18%'}}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-amber-100 dark:divide-amber-900">
                                     {showBeverageAddRow && (
                                         <tr className="bg-amber-50 dark:bg-amber-900/30">
-                                            <td colSpan={9} className="p-0">
+                                            <td colSpan={10} className="p-0">
                                                 <form onSubmit={handleBeverageInlineAdd}>
                                                     <table className="w-full">
                                                         <tbody>
@@ -1088,6 +1091,16 @@ export default function Dashboard({ stats, overallSales, products = [], categori
                                                                         onChange={(e) => beverageInlineForm.setData('price_per_case', e.target.value)}
                                                                         className="w-full px-2 py-1.5 border border-amber-300 dark:border-amber-700 rounded text-xs text-gray-900 dark:text-white bg-white dark:bg-slate-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-400"
                                                                         required
+                                                                    />
+                                                                </td>
+                                                                <td className="px-3 py-3 whitespace-nowrap">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        placeholder="Cold (optional)"
+                                                                        value={beverageInlineForm.data.price_per_case_cold}
+                                                                        onChange={(e) => beverageInlineForm.setData('price_per_case_cold', e.target.value)}
+                                                                        className="w-full px-2 py-1.5 border border-amber-300 dark:border-amber-700 rounded text-xs text-gray-900 dark:text-white bg-white dark:bg-slate-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-400"
                                                                     />
                                                                 </td>
                                                                 <td className="px-3 py-3 whitespace-nowrap">
@@ -1155,7 +1168,7 @@ export default function Dashboard({ stats, overallSales, products = [], categori
                                     )}
                                     {beverageProducts.length === 0 && !showBeverageAddRow && (
                                         <tr>
-                                            <td colSpan={9} className="px-6 py-12 text-center">
+                                            <td colSpan={10} className="px-6 py-12 text-center">
                                                 <Settings className="mx-auto h-12 w-12 text-amber-400" />
                                                 <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">No beverages yet</h3>
                                                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Click "Add Beverage" to get started.</p>
@@ -1164,7 +1177,7 @@ export default function Dashboard({ stats, overallSales, products = [], categori
                                     )}
                                     {/* Mobile card view - hidden on sm and up */}
                                     <tr className="sm:hidden">
-                                        <td colSpan={9} className="p-0">
+                                        <td colSpan={10} className="p-0">
                                             <div className="space-y-3">
                                                 {beverageProducts.map((product) => (
                                                     <div key={product.product_id} className="bg-white dark:bg-slate-700 rounded-lg border border-amber-200 dark:border-amber-800 p-3 shadow-sm">
@@ -1238,6 +1251,11 @@ export default function Dashboard({ stats, overallSales, products = [], categori
                                             </td>
                                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                                                 <span className="font-bold text-amber-600 dark:text-amber-400">{formatNumber(product.price_per_case)}/case</span>
+                                            </td>
+                                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                {product.price_per_case_cold
+                                                    ? <span className="font-bold text-amber-600 dark:text-amber-400">{formatNumber(product.price_per_case_cold)}/case</span>
+                                                    : <span className="text-gray-400 dark:text-gray-500">—</span>}
                                             </td>
                                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                                                 <span className="font-bold text-amber-600 dark:text-amber-400">{formatNumber(product.price_per_bottle)}/bottle</span>
