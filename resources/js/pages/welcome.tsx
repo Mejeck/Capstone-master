@@ -117,7 +117,7 @@ export default function Welcome() {
 
     const products = [
         {
-            name: 'Premium Ice Tubes',
+            name: 'Purified Ice Tubes',
             category: 'Ice Tubes',
             image: '/images/icetube.jpg',
             description: 'Crystal-clear ice tubes designed to keep your beverages perfectly chilled without diluting taste',
@@ -227,7 +227,7 @@ export default function Welcome() {
 
     // Returns the list of purchasable units (weight tier or case/bottle) for a product's dropdown selector
     const getProductUnits = (product: typeof products[0]): { label: string; price: number }[] => {
-        if (product.name === 'Premium Ice Tubes') {
+        if (product.name === 'Purified Ice Tubes') {
             return kiloPricing.map((t) => ({ label: `${t.kilo}kg`, price: t.price }));
         }
         const pricing = beveragePrices[product.name];
@@ -312,7 +312,7 @@ export default function Welcome() {
                                         />
                                         <div>
                                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mejeck IcePlant</h1>
-                                            <p className="text-sm text-cyan-600 dark:text-cyan-400">Premium Ice Tubes</p>
+                                            <p className="text-sm text-cyan-600 dark:text-cyan-400">Purified Ice Tubes</p>
                                         </div>
                                     </div>
                                 </div>
@@ -972,7 +972,7 @@ export default function Welcome() {
                                     />
                                     <h3 className="text-xl font-bold text-white dark:text-white">Mejeck IcePlant</h3>
                                 </div>
-                                <p className="text-gray-400">Premium Ice Tubes for Perfect Chills - Your trusted partner for beverage ice solutions.</p>
+                                <p className="text-gray-400">Purified Ice Tubes for Perfect Chills - Your trusted partner for beverage ice solutions.</p>
                             </div>
                             <div className="min-w-0 md:col-span-2">
                                 <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
@@ -989,7 +989,7 @@ export default function Welcome() {
                                     <li><a href="#" className="hover:text-white transition-colors">San Mig Light</a></li>
                                     <li><a href="#" className="hover:text-white transition-colors">San Mig Apple</a></li>
                                     <li><a href="#" className="hover:text-white transition-colors">San Mig Pilsen</a></li>
-                                    <li><a href="#" className="hover:text-white transition-colors">Premium Ice Tubes</a></li>
+                                    <li><a href="#" className="hover:text-white transition-colors">Purified Ice Tubes</a></li>
                                 </ul>
                             </div>
                             <div className="min-w-0 md:col-span-4">
@@ -1124,7 +1124,7 @@ export default function Welcome() {
 
                 {/* Product Modal — mirrors the Quick View modal customers see after logging in */}
                 {showProductModal && selectedProduct && (() => {
-                    const isBeverage = selectedProduct.name !== 'Premium Ice Tubes';
+                    const isBeverage = selectedProduct.name !== 'Purified Ice Tubes';
                     const units = getProductUnits(selectedProduct);
                     const selectedUnit = units[selectedUnitIndex] ?? units[0] ?? null;
                     const isCase = selectedUnitIndex === 0;
