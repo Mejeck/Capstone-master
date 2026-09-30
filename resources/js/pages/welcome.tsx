@@ -1,11 +1,20 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown, X, HelpCircle, User, Moon, Sun, Menu, ShoppingCart, CreditCard, CheckCircle2, AlertCircle, Send, LoaderCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, X, HelpCircle, User, Moon, Sun, Menu, ShoppingCart, CreditCard, CheckCircle2, AlertCircle, Send, LoaderCircle, MapPin, Truck, Clock, Home } from 'lucide-react';
 import QuantityInput from '@/components/customer/QuantityInput';
+import { IN_TOWN_MUNICIPALITY, MUNICIPALITIES, MUNICIPALITY_ALSO_KNOWN_AS } from '@/constants/municipalities';
 
 export default function Welcome() {
     const { props: pageProps } = usePage() as any;
     const flash = pageProps?.flash || {};
+    // Sent by the home route from DeliveryFeeSetting and the order
+    // controller's own minimum, so these cannot drift from what is
+    // actually charged. Fallbacks are only for a stale cached page.
+    const delivery = pageProps?.delivery ?? {};
+    const inTownFee = Number(delivery.in_town_fee ?? 20);
+    const outOfTownFee = Number(delivery.out_of_town_fee ?? 30);
+    const minimumOrder = Number(delivery.minimum_order ?? 200);
+    const inTownMunicipality = delivery.in_town_municipality ?? IN_TOWN_MUNICIPALITY;
     const {
         data: contactData,
         setData: setContactData,
@@ -314,6 +323,7 @@ export default function Welcome() {
                                 {[
                                     { id: 'home', label: 'HOME', href: '#home' },
                                     { id: 'about', label: 'ABOUT US', href: '#about' },
+                                    { id: 'delivery', label: 'DELIVERY AREAS', href: '#delivery' },
                                     { id: 'products', label: 'OUR PRODUCTS', href: '#products' },
                                     { id: 'contact', label: 'CONTACT US', href: '#contact' },
                                 ].map(({ id, label, href }) => (
@@ -386,6 +396,7 @@ export default function Welcome() {
                         <div className="px-4 py-4 space-y-3">
                             <a href="#home" onClick={() => setMobileMenuOpen(false)} className="block text-gray-900 dark:text-white px-4 py-2 text-sm font-medium">HOME</a>
                             <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block text-gray-900 dark:text-white px-4 py-2 text-sm font-medium">ABOUT US</a>
+                            <a href="#delivery" onClick={() => setMobileMenuOpen(false)} className="block text-gray-900 dark:text-white px-4 py-2 text-sm font-medium">DELIVERY AREAS</a>
                             <a href="#products" onClick={() => setMobileMenuOpen(false)} className="block text-gray-900 dark:text-white px-4 py-2 text-sm font-medium">OUR PRODUCTS</a>
                             <button
                                 onClick={() => {
@@ -561,6 +572,106 @@ export default function Welcome() {
                                 />
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                {/* Delivery Areas Section — reads the same MUNICIPALITIES list
+                    the checkout dropdown is built from, so this can never
+                    promise a town the order form would refuse. */}
+                <section id="delivery" className="py-20 bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-slate-800 dark:to-slate-900 transition-colors duration-300">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-12">
+                            <div className="inline-flex items-center gap-2 bg-cyan-500/10 dark:bg-cyan-400/10 text-cyan-700 dark:text-cyan-300 px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+                                <Truck className="w-4 h-4" />
+                                Delivery
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                                We Deliver in Selected Areas
+                            </h2>
+                            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                                Order online and we will bring the ice to you. These are the towns we currently serve.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-4xl mx-auto mb-12">
+                            {MUNICIPALITIES.map((municipality) => {
+                                const isInTown = municipality === inTownMunicipality;
+                                const alsoKnownAs = MUNICIPALITY_ALSO_KNOWN_AS[municipality];
+
+                                return (
+                                    <div
+                                        key={municipality}
+                                        className={`flex items-start gap-3 rounded-xl border-2 p-4 transition-colors ${
+                                            isInTown
+                                                ? 'border-cyan-500 bg-white dark:bg-slate-800 dark:border-cyan-400 shadow-md'
+                                                : 'border-gray-200 bg-white/70 dark:bg-slate-800/70 dark:border-slate-700'
+                                        }`}
+                                    >
+                                        {isInTown ? (
+                                            <Home className="w-5 h-5 text-cyan-600 dark:text-cyan-400 flex-shrink-0 mt-0.5" />
+                                        ) : (
+                                            <MapPin className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
+                                        )}
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-gray-900 dark:text-white leading-snug">
+                                                {municipality}
+                                            </p>
+                                            {alsoKnownAs && (
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                    also known as {alsoKnownAs}
+                                                </p>
+                                            )}
+                                            {isInTown && (
+                                                <p className="text-xs font-medium text-cyan-600 dark:text-cyan-400 mt-0.5">
+                                                    Our home town
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                            <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700">
+                                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                                    <Truck className="w-4 h-4" />
+                                    Delivery fee
+                                </div>
+                                <p className="text-gray-900 dark:text-white font-bold text-lg">
+                                    ₱{inTownFee.toFixed(2)}
+                                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400"> within {inTownMunicipality}</span>
+                                </p>
+                                <p className="text-gray-900 dark:text-white font-bold text-lg">
+                                    ₱{outOfTownFee.toFixed(2)}
+                                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400"> for the other towns</span>
+                                </p>
+                            </div>
+
+                            <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700">
+                                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                                    <ShoppingCart className="w-4 h-4" />
+                                    Minimum order
+                                </div>
+                                <p className="text-gray-900 dark:text-white font-bold text-lg">₱{minimumOrder.toFixed(2)}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">for delivery orders</p>
+                            </div>
+
+                            <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700">
+                                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                                    <Clock className="w-4 h-4" />
+                                    Delivery hours
+                                </div>
+                                <p className="text-gray-900 dark:text-white font-bold text-lg">9:00 AM – 5:30 PM</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">daily</p>
+                            </div>
+                        </div>
+
+                        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
+                            Outside these areas? You are welcome to pick up your order at the plant —
+                            {' '}<a href="#contact" className="text-cyan-600 dark:text-cyan-400 font-medium hover:underline">get in touch</a>{' '}
+                            and we will sort it out.
+                        </p>
                     </div>
                 </section>
 
@@ -869,6 +980,7 @@ export default function Welcome() {
                                 <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
                                 <ul className="space-y-2 text-gray-400">
                                     <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
+                                    <li><a href="#delivery" className="hover:text-white transition-colors">Delivery Areas</a></li>
                                     <li><a href="#products" className="hover:text-white transition-colors">Products</a></li>
                                     <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
                                 </ul>

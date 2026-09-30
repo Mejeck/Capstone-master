@@ -21,7 +21,18 @@ use App\Http\Controllers\Admin\StaffAccountController;
 use App\Http\Controllers\ContactController;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    // The delivery figures come from the same places that enforce them, so
+    // the landing page cannot quote a fee the checkout no longer charges.
+    $fees = \App\Models\DeliveryFeeSetting::current();
+
+    return Inertia::render('welcome', [
+        'delivery' => [
+            'in_town_municipality' => \App\Models\DeliveryFeeSetting::IN_TOWN_MUNICIPALITY,
+            'in_town_fee' => (float) $fees->in_town_fee,
+            'out_of_town_fee' => (float) $fees->out_of_town_fee,
+            'minimum_order' => \App\Http\Controllers\Api\OrderController::MIN_DELIVERY_ORDER_AMOUNT,
+        ],
+    ]);
 })->name('home');
 
 Route::post('/contact-us', [ContactController::class, 'send'])

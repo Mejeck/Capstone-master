@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeliveryFeeSetting extends Model
 {
-    const IN_TOWN_MUNICIPALITY = 'Penaranda';
+    const IN_TOWN_MUNICIPALITY = 'Peñaranda';
 
     protected $fillable = [
         'in_town_fee',
@@ -33,10 +33,27 @@ class DeliveryFeeSetting extends Model
     {
         $settings = self::current();
 
-        if ($municipality && strcasecmp(trim($municipality), self::IN_TOWN_MUNICIPALITY) === 0) {
+        if ($municipality && self::isInTown($municipality)) {
             return (float) $settings->in_town_fee;
         }
 
         return (float) $settings->out_of_town_fee;
+    }
+
+    /**
+     * The town's name is stored on every order and saved address, and it has
+     * been written both ways: rows created before the tilde was added read
+     * "Penaranda". A plain string comparison would treat those as out of
+     * town and charge the home town the farther fee, so the tilde is folded
+     * away before comparing and either spelling resolves to the same place.
+     */
+    public static function isInTown(?string $municipality): bool
+    {
+        return self::normaliseName($municipality) === self::normaliseName(self::IN_TOWN_MUNICIPALITY);
+    }
+
+    private static function normaliseName(?string $value): string
+    {
+        return mb_strtolower(str_replace(['ñ', 'Ñ'], ['n', 'N'], trim((string) $value)));
     }
 }
