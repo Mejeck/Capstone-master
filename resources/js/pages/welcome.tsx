@@ -323,7 +323,6 @@ export default function Welcome() {
                                 {[
                                     { id: 'home', label: 'HOME', href: '#home' },
                                     { id: 'about', label: 'ABOUT US', href: '#about' },
-                                    { id: 'delivery', label: 'DELIVERY AREAS', href: '#delivery' },
                                     { id: 'products', label: 'OUR PRODUCTS', href: '#products' },
                                     { id: 'contact', label: 'CONTACT US', href: '#contact' },
                                 ].map(({ id, label, href }) => (
@@ -396,7 +395,6 @@ export default function Welcome() {
                         <div className="px-4 py-4 space-y-3">
                             <a href="#home" onClick={() => setMobileMenuOpen(false)} className="block text-gray-900 dark:text-white px-4 py-2 text-sm font-medium">HOME</a>
                             <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block text-gray-900 dark:text-white px-4 py-2 text-sm font-medium">ABOUT US</a>
-                            <a href="#delivery" onClick={() => setMobileMenuOpen(false)} className="block text-gray-900 dark:text-white px-4 py-2 text-sm font-medium">DELIVERY AREAS</a>
                             <a href="#products" onClick={() => setMobileMenuOpen(false)} className="block text-gray-900 dark:text-white px-4 py-2 text-sm font-medium">OUR PRODUCTS</a>
                             <button
                                 onClick={() => {
@@ -980,7 +978,6 @@ export default function Welcome() {
                                 <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
                                 <ul className="space-y-2 text-gray-400">
                                     <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                                    <li><a href="#delivery" className="hover:text-white transition-colors">Delivery Areas</a></li>
                                     <li><a href="#products" className="hover:text-white transition-colors">Products</a></li>
                                     <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
                                 </ul>
