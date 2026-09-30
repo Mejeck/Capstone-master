@@ -290,7 +290,7 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="Mejeck IcePlant - Premium Ice Solutions" />
+            <Head title="Mejeck IcePlant - Purified Ice Solutions" />
 
             <div className={`min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300`}>
                 {/* Navigation Header */}
@@ -561,7 +561,7 @@ export default function Welcome() {
                             <div className="relative">
                                 <img 
                                     src="/images/ALLIN.png" 
-                                    alt="Premium Ice Products" 
+                                    alt="Purified Ice Products" 
                                     className="rounded-2xl shadow-2xl w-full"
                                     onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                                         const target = e.currentTarget;
