@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { initializeTheme } from './hooks/use-appearance';
 import FlashToaster from './components/flash-toaster';
 import WelcomeBackModal from './components/welcome-back-modal';
+import GlobalErrorOverlay from './components/GlobalErrorOverlay';
 
 declare global {
     const route: (name: string, params?: any, absolute?: boolean) => string;
@@ -29,6 +30,7 @@ createInertiaApp({
                 <App {...props} />
                 <FlashToaster initialFlash={initialFlash} />
                 <WelcomeBackModal initialFlash={initialFlash} />
+                <GlobalErrorOverlay />
             </>,
         );
     },
