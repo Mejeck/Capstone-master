@@ -81,7 +81,7 @@ export default function ResetPassword({ otp, email, status }: ResetPasswordProps
                             className="border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/20 dark:border-cyan-700 dark:focus:border-cyan-400"
                             autoFocus
                             onChange={(e) => setData('password', e.target.value)}
-                            placeholder="Create a strong password"
+                            placeholder="Create password"
                         />
                         <InputError message={errors.password} />
                         <PasswordStrengthIndicator password={data.password} />
@@ -119,7 +119,7 @@ export default function ResetPassword({ otp, email, status }: ResetPasswordProps
                         <span>Remember your password? </span>
                         <TextLink 
                             href={route('login')} 
-                            className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors"
+                            className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors whitespace-nowrap"
                         >
                             Sign in here
                         </TextLink>
@@ -128,7 +128,7 @@ export default function ResetPassword({ otp, email, status }: ResetPasswordProps
                         <span>Don't have an account? </span>
                         <TextLink 
                             href={route('register')} 
-                            className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors"
+                            className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors whitespace-nowrap"
                         >
                             Create account
                         </TextLink>

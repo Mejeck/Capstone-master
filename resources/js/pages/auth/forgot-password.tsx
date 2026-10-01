@@ -91,7 +91,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                             <span>Remember your password? </span>
                             <TextLink 
                                 href={route('login')} 
-                                className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors"
+                                className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors whitespace-nowrap"
                             >
                                 Sign in here
                             </TextLink>
@@ -100,7 +100,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                             <span>Don't have an account? </span>
                             <TextLink 
                                 href={route('register')} 
-                                className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors"
+                                className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors whitespace-nowrap"
                             >
                                 Create account
                             </TextLink>

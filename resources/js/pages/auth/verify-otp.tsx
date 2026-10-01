@@ -78,7 +78,7 @@ export default function VerifyOtp({ email, status }: VerifyOtpProps) {
                                     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
                                     setData('otp', value);
                                 }}
-                                placeholder="Enter 6-digit code"
+                                placeholder="000000"
                                 className="border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/20 dark:border-cyan-700 dark:focus:border-cyan-400 text-center text-2xl tracking-widest font-mono"
                             />
                             <InputError message={errors.otp} />
@@ -102,7 +102,7 @@ export default function VerifyOtp({ email, status }: VerifyOtpProps) {
                             <span>Didn't receive the code? </span>
                             <TextLink 
                                 href={route('password.request')} 
-                                className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors"
+                                className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors whitespace-nowrap"
                             >
                                 Request a new one
                             </TextLink>
@@ -111,7 +111,7 @@ export default function VerifyOtp({ email, status }: VerifyOtpProps) {
                             <span>Remember your password? </span>
                             <TextLink 
                                 href={route('login')} 
-                                className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors"
+                                className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors whitespace-nowrap"
                             >
                                 Sign in here
                             </TextLink>

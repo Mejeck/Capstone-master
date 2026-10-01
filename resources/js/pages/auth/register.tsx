@@ -222,7 +222,7 @@ export default function Register() {
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             disabled={processing}
-                            placeholder="Create a strong password"
+                            placeholder="Create password"
                             className="border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/20 dark:border-cyan-700 dark:focus:border-cyan-400 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm"
                         />
                         <InputError message={errors.password} />
@@ -242,7 +242,7 @@ export default function Register() {
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
                             disabled={processing}
-                            placeholder="Confirm your password"
+                            placeholder="Confirm password"
                             className="border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/20 dark:border-cyan-700 dark:focus:border-cyan-400 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm"
                         />
                         <InputError message={errors.password_confirmation} />
@@ -305,7 +305,7 @@ export default function Register() {
                             className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors inline-flex items-center gap-1"
                             tabIndex={9}
                         >
-                            <span>Sign in</span>
+                            <span className="whitespace-nowrap">Sign in</span>
                         </TextLink>
                     </span>
                 </div>

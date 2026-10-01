@@ -83,7 +83,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             value={data.login}
                             onChange={(e) => setData('login', e.target.value)}
                             onKeyDown={focusPasswordOnEnter}
-                            placeholder="Enter your username or email"
+                            placeholder="Username or email"
                             className="border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/20 dark:border-cyan-700 dark:focus:border-cyan-400 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm"
                         />
                         <InputError message={errors.login} />
@@ -103,7 +103,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 text-sm transition-colors flex items-center gap-1"
                                     tabIndex={5}
                                 >
-                                    <span>Forgot password?</span>
+                                    <span className="whitespace-nowrap">Forgot password?</span>
                                 </TextLink>
                             )}
                         </div>
@@ -164,7 +164,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors inline-flex items-center gap-1"
                             tabIndex={6}
                         >
-                            <span>Create account</span>
+                            <span className="whitespace-nowrap">Create account</span>
                         </TextLink>
                     </span>
                 </div>
