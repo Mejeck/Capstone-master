@@ -86,7 +86,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('settings', [CustomerController::class, 'settings'])->name('customer.settings');
         Route::put('settings/profile', [CustomerController::class, 'updateProfile'])->name('customer.settings.profile');
         Route::put('settings/password', [CustomerController::class, 'updatePassword'])->name('customer.settings.password');
-        Route::delete('settings/account', [CustomerController::class, 'deleteAccount'])->name('customer.settings.account');
         Route::post('settings/addresses', [CustomerController::class, 'storeAddress'])->name('customer.settings.addresses.store');
         Route::put('settings/addresses/{id}', [CustomerController::class, 'updateAddress'])->name('customer.settings.addresses.update');
         Route::delete('settings/addresses/{id}', [CustomerController::class, 'destroyAddress'])->name('customer.settings.addresses.destroy');

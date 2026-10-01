@@ -1,5 +1,5 @@
 import { Head, Link, usePage, useForm, router } from '@inertiajs/react';
-import { User, Mail, Lock, AlertTriangle, Save, Trash2, Cake, LockKeyhole, MapPin, Plus, Star, Pencil, X, LogOut } from 'lucide-react';
+import { User, Mail, Lock, Save, Trash2, Cake, LockKeyhole, MapPin, Plus, Star, Pencil, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { type SharedData } from '@/types';
 import CustomerNav from '@/components/CustomerNav';
@@ -57,8 +57,7 @@ const emptyAddressForm = {
 
 export default function CustomerSettings({ addresses = [] }: { addresses?: UserAddress[] }) {
     const { auth } = usePage<SharedData>().props;
-    const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'addresses' | 'delete'>('profile');
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'addresses'>('profile');
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
     // Centered confirm() replacement, used for "Delete this address?" below.
@@ -155,18 +154,6 @@ export default function CustomerSettings({ addresses = [] }: { addresses?: UserA
         });
     };
 
-    // Delete-account form (requires re-entering the current password)
-    const deleteForm = useForm({ password: '' });
-
-    const submitDeleteAccount = (e: React.FormEvent) => {
-        e.preventDefault();
-        deleteForm.delete('/customer/settings/account', {
-            onSuccess: () => {
-                window.location.href = '/';
-            },
-        });
-    };
-
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
             <Head title="Settings - Mejeck Ice Plant" />
@@ -218,17 +205,6 @@ export default function CustomerSettings({ addresses = [] }: { addresses?: UserA
                                 <LogOut className="w-4 h-4 mr-2" />
                                 Logout
                             </Link>
-                            <button
-                                onClick={() => setActiveTab('delete')}
-                                className={`flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap col-span-2 sm:col-span-1 ${
-                                    activeTab === 'delete'
-                                        ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
-                                        : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
-                                }`}
-                            >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Account
-                            </button>
                     </div>
                 </div>
 
@@ -593,84 +569,6 @@ export default function CustomerSettings({ addresses = [] }: { addresses?: UserA
                                         Cancel
                                     </button>
                                 </div>
-                            </form>
-                        )}
-                    </div>
-                )}
-
-                {/* Delete Account Tab */}
-                {activeTab === 'delete' && (
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-900 p-6">
-                        <div className="flex items-center mb-6">
-                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mr-4">
-                                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
-                            </div>
-                            <h2 className="text-2xl font-bold text-red-600 dark:text-red-400">Delete Account</h2>
-                        </div>
-
-                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded-lg p-4 mb-6">
-                            <p className="text-red-800 dark:text-red-300 font-medium mb-2">Warning: This action cannot be undone!</p>
-                            <p className="text-red-700 dark:text-red-400 text-sm">
-                                Deleting your account will permanently remove all your data including:
-                            </p>
-                            <ul className="list-disc list-inside text-red-700 dark:text-red-400 text-sm mt-2 space-y-1">
-                                <li>Your profile information</li>
-                                <li>Order history</li>
-                                <li>Delivery addresses</li>
-                                <li>All account settings</li>
-                            </ul>
-                        </div>
-
-                        {!showDeleteConfirm ? (
-                            <button
-                                onClick={() => setShowDeleteConfirm(true)}
-                                className="flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition-all"
-                            >
-                                <Trash2 className="w-5 h-5 mr-2" />
-                                Delete My Account
-                            </button>
-                        ) : (
-                            <form onSubmit={submitDeleteAccount} className="space-y-4">
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    Enter your password to confirm. This action cannot be undone.
-                                </p>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Password
-                                    </label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-                                        <PasswordInput
-                                            value={deleteForm.data.password}
-                                            onChange={(e) => deleteForm.setData('password', e.target.value)}
-                                            className="pl-10 pr-10 py-3 border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus-visible:ring-red-500 focus:border-transparent"
-                                            placeholder="Enter your current password"
-                                            autoFocus
-                                        />
-                                    </div>
-                                    {deleteForm.errors.password && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{deleteForm.errors.password}</p>
-                                    )}
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={deleteForm.processing || !deleteForm.data.password}
-                                    className="flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <Trash2 className="w-5 h-5 mr-2" />
-                                    {deleteForm.processing ? 'Deleting...' : 'Yes, Delete My Account Permanently'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowDeleteConfirm(false);
-                                        deleteForm.reset();
-                                        deleteForm.clearErrors();
-                                    }}
-                                    className="flex items-center justify-center w-full bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white py-3 rounded-lg font-semibold transition-all"
-                                >
-                                    Cancel
-                                </button>
                             </form>
                         )}
                     </div>

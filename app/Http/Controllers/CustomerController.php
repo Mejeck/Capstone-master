@@ -666,34 +666,4 @@ class CustomerController extends Controller
 
         return back()->with('success', 'Password updated successfully!');
     }
-
-    public function deleteAccount(Request $request)
-    {
-        $request->validate([
-            'password' => 'required|string',
-        ]);
-
-        $user = Auth::user();
-
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors([
-                'password' => 'The password is incorrect.',
-            ]);
-        }
-
-        // Delete user's orders
-        $user->orders()->delete();
-
-        // Delete customer record if exists
-        if ($user->customer) {
-            $user->customer->delete();
-        }
-
-        // Delete user
-        $user->delete();
-
-        Auth::logout();
-
-        return redirect()->route('home')->with('success', 'Account deleted successfully.');
-    }
 }

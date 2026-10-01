@@ -50,27 +50,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/');
-    }
-
-    /**
      * Backup the database and download it.
      */
     public function backup(Request $request)
