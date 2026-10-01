@@ -16,6 +16,7 @@ import {
     Clock
 } from 'lucide-react';
 import CustomerNav from '@/components/CustomerNav';
+import { MAX_UPLOAD_MB, isWithinUploadLimit } from '@/lib/uploads';
 
 interface Order {
     order_id: number;
@@ -87,12 +88,12 @@ export default function CreateReport({ order, defaultType = '' }: CreateReportPr
     const handleFiles = (newFiles: File[]) => {
         const validFiles = newFiles.filter(file => {
             const isValidType = file.type.startsWith('image/') || file.type.startsWith('video/');
-            const isValidSize = file.size <= 100 * 1024 * 1024; // 100MB
+            const isValidSize = isWithinUploadLimit(file);
             return isValidType && isValidSize;
         });
 
         if (validFiles.length !== newFiles.length) {
-            alert('Some files were rejected. Only images (JPEG, PNG) and videos (MP4, MOV, AVI) up to 100MB are allowed.');
+            alert(`Some files were rejected. Only images (JPEG, PNG) and videos (MP4, MOV, AVI) up to ${MAX_UPLOAD_MB}MB are allowed.`);
         }
 
         setFiles(prev => [...prev, ...validFiles]);
@@ -375,7 +376,7 @@ export default function CreateReport({ order, defaultType = '' }: CreateReportPr
                                 <span>Please upload at least one image or video (10-30 seconds) as proof</span>
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                                Accepted formats: JPEG, PNG, MP4, MOV, AVI (Max 100MB per file)
+                                Accepted formats: JPEG, PNG, MP4, MOV, AVI (Max {MAX_UPLOAD_MB}MB per file)
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 Videos should be 10-30 seconds long to clearly show the issue

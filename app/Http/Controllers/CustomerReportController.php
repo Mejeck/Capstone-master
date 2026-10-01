@@ -64,7 +64,7 @@ class CustomerReportController extends Controller
             'delivery_boy_name' => 'nullable|string|max:255',
             'delivery_boy_issue_details' => 'nullable|string|max:1000',
             'evidence' => 'required|array|min:1',
-            'evidence.*' => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:102400', // Max 100MB
+            'evidence.*' => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:' . config('uploads.max_kilobytes'),
         ]);
 
         $order = Order::where('order_id', $request->order_id)

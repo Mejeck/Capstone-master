@@ -5,6 +5,7 @@ import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { showToast } from '@/lib/toast';
+import { MAX_UPLOAD_MB, isWithinUploadLimit } from '@/lib/uploads';
 
 interface OrderItem {
     order_item_id: number;
@@ -202,12 +203,12 @@ export default function DeliveryBoyDashboard() {
     const handleFiles = (newFiles: File[]) => {
         const validFiles = newFiles.filter(file => {
             const isValidType = file.type.startsWith('image/');
-            const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+            const isValidSize = isWithinUploadLimit(file);
             return isValidType && isValidSize;
         });
 
         if (validFiles.length !== newFiles.length) {
-            alert('Some files were rejected. Only images (JPEG, PNG) up to 10MB are allowed.');
+            alert(`Some files were rejected. Only images (JPEG, PNG) up to ${MAX_UPLOAD_MB}MB are allowed.`);
         }
 
         setDeliveryPhotos(prev => [...prev, ...validFiles]);

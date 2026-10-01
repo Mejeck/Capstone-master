@@ -591,7 +591,7 @@ export default function BrokenBottles() {
                                                         Click to upload image
                                                     </span>
                                                     <span className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                                                        PNG, JPG, GIF up to 10MB
+                                                        PNG, JPG, GIF up to 4MB
                                                     </span>
                                                 </label>
                                             </div>

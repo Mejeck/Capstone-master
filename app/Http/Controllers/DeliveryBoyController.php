@@ -93,7 +93,7 @@ class DeliveryBoyController extends Controller
                 // stored to the public disk. Match the validation used
                 // elsewhere (e.g. CustomerController's payment screenshots).
                 $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-                    'photos.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+                    'photos.*' => 'image|mimes:jpeg,png,jpg|max:' . config('uploads.max_kilobytes'),
                 ]);
 
                 if ($validator->fails()) {

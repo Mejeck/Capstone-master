@@ -27,7 +27,7 @@ class BrokenBottleController extends Controller
             'beverage_type' => 'required|in:Red Horse,San Mig Light,San Mig Apple,San Mig Pilsen',
             'quantity' => 'required|integer|min:1',
             'unit_type' => 'required|in:bottle,case',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:' . config('uploads.max_kilobytes'),
         ]);
 
         $imagePath = null;

@@ -242,7 +242,7 @@ class CustomerController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'screenshot' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'screenshot' => 'required|image|mimes:jpeg,png,jpg|max:' . config('uploads.max_kilobytes'),
         ]);
 
         $order = Order::where('order_id', $id)
@@ -278,7 +278,7 @@ class CustomerController extends Controller
         }
 
         $request->validate([
-            'screenshot' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'screenshot' => 'required|image|mimes:jpeg,png,jpg|max:' . config('uploads.max_kilobytes'),
         ]);
 
         $order = Order::where('order_id', $id)

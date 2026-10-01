@@ -39,6 +39,7 @@ import OrderSuccessModal from '@/components/customer/OrderSuccessModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import QuantityInput, { toStockCount } from '@/components/customer/QuantityInput';
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '@/lib/uploads';
 
 // GCash-rejected notice acknowledgement: persisted per-user in localStorage so
 // clicking "Got it" keeps it dismissed across page loads/future visits, not
@@ -1354,7 +1355,7 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                                                 <div>
                                                     <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                                                     <p className="text-sm text-gray-600 dark:text-gray-400">Tap to select screenshot</p>
-                                                    <p className="text-xs text-gray-400 mt-1">JPG, PNG — max 5MB</p>
+                                                    <p className="text-xs text-gray-400 mt-1">JPG, PNG — {MAX_UPLOAD_LABEL}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -1365,8 +1366,8 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
                                                 if (file) {
-                                                    if (file.size > 5 * 1024 * 1024) {
-                                                        alert('File is too large. Maximum size is 5MB.');
+                                                    if (file.size > MAX_UPLOAD_BYTES) {
+                                                        alert(`File is too large. Maximum size is ${MAX_UPLOAD_LABEL.replace('max ', '')}.`);
                                                         return;
                                                     }
                                                     setResubmitScreenshot(file);

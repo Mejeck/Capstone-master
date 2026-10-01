@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle, FileText, X } from 'lucide-react';
 import { STORE } from '@/constants/store';
 import { usePaymentProofUpload } from '@/hooks/usePaymentProofUpload';
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '@/lib/uploads';
 
 interface CodOrderData {
     order?: {
@@ -141,7 +142,7 @@ export default function CodProofModal({ open, order, onClose, onDone }: CodProof
                                         <div>
                                             <FileText className="w-10 h-10 text-gray-400 mx-auto mb-2" />
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Tap to select receipt photo</p>
-                                            <p className="text-xs text-gray-400 mt-1">JPG, PNG — max 5MB</p>
+                                            <p className="text-xs text-gray-400 mt-1">JPG, PNG — {MAX_UPLOAD_LABEL}</p>
                                         </div>
                                     )}
                                 </div>
@@ -152,8 +153,8 @@ export default function CodProofModal({ open, order, onClose, onDone }: CodProof
                                     onChange={(e) => {
                                         const file = e.target.files?.[0];
                                         if (file) {
-                                            if (file.size > 5 * 1024 * 1024) {
-                                                alert('File is too large. Maximum size is 5MB.');
+                                            if (file.size > MAX_UPLOAD_BYTES) {
+                                                alert(`File is too large. Maximum size is ${MAX_UPLOAD_LABEL.replace('max ', '')}.`);
                                                 return;
                                             }
                                             setScreenshot(file);
