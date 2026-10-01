@@ -111,6 +111,9 @@ class CustomerController extends Controller
             'in_town_fee' => (float) $settings->in_town_fee,
             'out_of_town_fee' => (float) $settings->out_of_town_fee,
             'in_town_municipality' => DeliveryFeeSetting::IN_TOWN_MUNICIPALITY,
+            // Sent so the order form can warn before submitting, instead
+            // of the customer finding out only when the request is refused.
+            'minimum_order' => (float) \App\Http\Controllers\Api\OrderController::MIN_DELIVERY_ORDER_AMOUNT,
         ];
     }
 

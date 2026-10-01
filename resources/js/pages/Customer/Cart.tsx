@@ -19,6 +19,7 @@ import { useSubmitOrder } from '@/hooks/useSubmitOrder';
 import OrderTypeSelector from '@/components/customer/OrderTypeSelector';
 import PaymentMethodSelector from '@/components/customer/PaymentMethodSelector';
 import DownPaymentNotice from '@/components/customer/DownPaymentNotice';
+import DeliveryMinimumNotice from '@/components/customer/DeliveryMinimumNotice';
 import DeliveryAddressFields from '@/components/customer/DeliveryAddressFields';
 import PickupLocationInfo from '@/components/customer/PickupLocationInfo';
 import OrderSummaryList from '@/components/customer/OrderSummaryList';
@@ -76,6 +77,7 @@ interface CartPageProps {
         in_town_fee: number;
         out_of_town_fee: number;
         in_town_municipality: string;
+        minimum_order: number;
     };
 }
 
@@ -422,6 +424,8 @@ export default function CartPage({ products, addresses = [], deliveryFeeSettings
 
                             <div className="space-y-6">
                                 <OrderTypeSelector orderForm={orderForm} setOrderForm={setOrderForm} />
+
+                                <DeliveryMinimumNotice orderForm={orderForm} total={cartTotal} minimumOrder={deliveryFeeSettings?.minimum_order} />
 
                                 <DownPaymentNotice orderForm={orderForm} total={cartTotal} />
 
