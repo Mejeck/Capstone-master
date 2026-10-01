@@ -242,12 +242,12 @@ export default function Welcome() {
         {
             question: "Pricing",
             details: "How much per kilo of ice tubes? Minimum kilo order? Discount for bulk?",
-            answer: "Our ice tubes are priced affordably per kilo with a minimum order of just 1 kilo. We offer competitive bulk discounts for orders above 20kg. Contact us for current pricing and special rates for large orders."
+            answer: "Ice tubes start at ₱10 for 1 kilo, and the price per kilo falls as the order grows — 50kg costs ₱250, which works out at ₱5 a kilo. Every tier is shown on the product itself. For anything beyond 50kg, contact us and we will arrange it."
         },
         {
             question: "Delivery",
-            details: "Can you deliver per kilo? Delivery fee based on weight or distance? Same-day delivery?",
-            answer: "Yes, we deliver per kilo! Delivery fees are based on distance within our service area. We offer same-day delivery for orders placed before 12 PM. Delivery is available daily from 9 AM until 5:30 PM."
+            details: "Can you deliver per kilo? Delivery fee based on weight or distance? Is there a minimum?",
+            answer: `Yes, we deliver per kilo! The delivery fee is a flat ₱${inTownFee.toFixed(2)} within ${inTownMunicipality} and ₱${outOfTownFee.toFixed(2)} for the other towns we serve — it does not change with distance. Delivery orders have to reach ₱${minimumOrder.toFixed(2)}. We deliver daily from 9 AM until 5:30 PM.`
         },
         {
             question: "Packaging",
@@ -262,7 +262,7 @@ export default function Welcome() {
         {
             question: "Ordering",
             details: "How many kilos can I order? Is there a maximum?",
-            answer: "You can order from 1 kilo up to 50kg maximum per delivery. For larger commercial needs, please contact us directly for special arrangements and pricing."
+            answer: `You can order from 1 kilo up to 50kg per delivery. A delivery order also has to reach ₱${minimumOrder.toFixed(2)} — below that you are welcome to pick the order up instead. For larger commercial needs, contact us directly for special arrangements and pricing.`
         },
         {
             question: "Storage Tips",
