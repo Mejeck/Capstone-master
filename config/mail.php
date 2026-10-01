@@ -26,7 +26,23 @@ return [
     |
     */
 
-    'contact_address' => env('MAIL_CONTACT_ADDRESS', 'harrismanabat3@gmail.com'),
+    // One or more inboxes, separated by commas in MAIL_CONTACT_ADDRESS.
+    // Anything that is not a well-formed address is dropped rather than
+    // passed on: Symfony Mailer throws on a malformed recipient before it
+    // sends anything, so a single typo would otherwise stop the message
+    // reaching the addresses that were spelled correctly.
+    'contact_address' => array_values(array_filter(
+        array_map('trim', explode(
+            ',',
+            // A variable that is present but blank makes env() return '' and
+            // never reach its default, which is how this ended up with no
+            // recipient at all and every message failing to send. Fall back
+            // on emptiness, not just on absence.
+            trim((string) env('MAIL_CONTACT_ADDRESS'))
+                ?: 'harrismanabat3@gmail.com,yorforger069@gmail.com'
+        )),
+        fn (string $address) => filter_var($address, FILTER_VALIDATE_EMAIL) !== false,
+    )),
 
     /*
     |--------------------------------------------------------------------------

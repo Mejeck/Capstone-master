@@ -25,8 +25,20 @@ class ContactController extends Controller
             'website' => ['prohibited'],
         ]);
 
+        $recipients = config('mail.contact_address');
+
+        // With nothing configured the send would fail on a missing To header,
+        // which reads as a mail outage in the log rather than what it is.
+        if (empty($recipients)) {
+            Log::error('Contact form has no recipient configured: MAIL_CONTACT_ADDRESS holds no valid address.');
+
+            return back()
+                ->withInput()
+                ->with('error', 'Sorry, we could not send your message right now. Please try again later or call us instead.');
+        }
+
         try {
-            Mail::to(config('mail.contact_address'))->send(new ContactFormMail(
+            Mail::to($recipients)->send(new ContactFormMail(
                 senderName: $validated['name'],
                 senderEmail: $validated['email'],
                 senderPhone: $validated['phone'] ?? null,
