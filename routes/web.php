@@ -35,6 +35,12 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Public on purpose: the notice has to be readable before signing up,
+// since that is when consent to it is asked for.
+Route::get('/privacy', function () {
+    return Inertia::render('privacy');
+})->name('privacy');
+
 Route::post('/contact-us', [ContactController::class, 'send'])
     ->middleware('throttle:5,1')
     ->name('contact.send');

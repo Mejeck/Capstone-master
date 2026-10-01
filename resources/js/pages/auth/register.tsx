@@ -25,6 +25,7 @@ interface RegisterForm {
     email: string;
     contact_number: string;
     birthdate: string;
+    privacy_consent: boolean;
     password: string;
     password_confirmation: string;
     [key: string]: any; // Add index signature for Inertia compatibility
@@ -37,6 +38,8 @@ export default function Register() {
         email: '',
         contact_number: '',
         birthdate: '',
+        // Never pre-ticked: consent has to be given, not assumed.
+        privacy_consent: false,
         password: '',
         password_confirmation: '',
     });
@@ -63,6 +66,10 @@ export default function Register() {
                 fieldErrors[field] = fieldLabels[field as string];
             }
         }
+        if (!data.privacy_consent) {
+            fieldErrors.privacy_consent = 'Please read and agree to the Privacy Notice before creating an account.';
+        }
+
         // A half-typed number is not empty, so the loop above lets it
         // through — and the customer would only find out after sitting
         // through the email OTP step. Check the shape here instead.
@@ -243,6 +250,37 @@ export default function Register() {
                             password={data.password} 
                             passwordConfirmation={data.password_confirmation} 
                         />
+                    </div>
+
+                    {/* Consent to the privacy notice. Deliberately unticked and
+                        separate from the submit button, so agreeing is its own
+                        act rather than a side effect of signing up. */}
+                    <div className="grid gap-2">
+                        <label htmlFor="privacy_consent" className="flex items-start gap-3 cursor-pointer">
+                            <input
+                                id="privacy_consent"
+                                type="checkbox"
+                                tabIndex={7}
+                                checked={data.privacy_consent}
+                                onChange={(e) => setData('privacy_consent', e.target.checked)}
+                                disabled={processing}
+                                className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-cyan-300 text-cyan-600 focus:ring-cyan-500 dark:border-cyan-700"
+                            />
+                            <span className="text-sm text-slate-600 dark:text-slate-300">
+                                I have read and agree to the{' '}
+                                <a
+                                    href={route('privacy')}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+                                >
+                                    Privacy Notice
+                                </a>
+                                , and I consent to Mejeck IcePlant collecting and using my personal information to
+                                process and deliver my orders.
+                            </span>
+                        </label>
+                        <InputError message={errors.privacy_consent} />
                     </div>
 
                     <Button 

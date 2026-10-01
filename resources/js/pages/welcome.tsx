@@ -980,6 +980,7 @@ export default function Welcome() {
                                     <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
                                     <li><a href="#products" className="hover:text-white transition-colors">Products</a></li>
                                     <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
+                                    <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Notice</a></li>
                                 </ul>
                             </div>
                             <div className="min-w-0 md:col-span-3">

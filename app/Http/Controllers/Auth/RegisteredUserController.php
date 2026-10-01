@@ -79,6 +79,9 @@ class RegisteredUserController extends Controller
                 'before_or_equal:' . now()->subYears(User::MINIMUM_SIGNUP_AGE)->toDateString(),
                 'after_or_equal:' . User::EARLIEST_BIRTHDATE,
             ],
+            // 'accepted' rejects a missing or false value, so the account
+            // cannot be created without the box actually being ticked.
+            'privacy_consent' => 'accepted',
             'password' => [
                 'required',
                 'confirmed',
@@ -95,6 +98,7 @@ class RegisteredUserController extends Controller
             'contact_number.unique' => 'This contact number is already registered to another account.',
             'birthdate.before_or_equal' => 'You must be at least ' . User::MINIMUM_SIGNUP_AGE . ' years old to create an account.',
             'birthdate.after_or_equal' => 'Please enter a valid birthdate.',
+            'privacy_consent.accepted' => 'Please read and agree to the Privacy Notice before creating an account.',
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&.).',
             'password.confirmed' => 'The password confirmation does not match.',
         ]);
@@ -107,6 +111,8 @@ class RegisteredUserController extends Controller
                 'email' => $request->email,
                 'contact_number' => $request->contact_number,
                 'birthdate' => $request->birthdate,
+                // Evidence of consent, as the Data Privacy Act asks for.
+                'privacy_consent_at' => now(),
                 'password' => Hash::make($request->password),
                 'role' => 'Customer',
                 'is_active' => 1,
