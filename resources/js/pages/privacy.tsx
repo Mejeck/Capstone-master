@@ -142,10 +142,27 @@ export default function Privacy() {
                     </Section>
 
                     <Section title="How long we keep it">
-                        <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
-                            <strong>To be completed by the store:</strong> state how long account and order records are
-                            kept after an account stops being used — for example, five years from the last order, to
-                            match the retention period for business records — and what is deleted at the end of it.
+                        <ul className="list-disc pl-5 space-y-2">
+                            <li>
+                                <strong>Your account details</strong> — for as long as you have an account with us.
+                            </li>
+                            <li>
+                                <strong>Orders, sales records and the payment proofs attached to them</strong> — five
+                                years from the date of the order, which is the period a business is expected to keep
+                                its records.
+                            </li>
+                            <li>
+                                <strong>Reports you file and the photos or video attached</strong> — five years from
+                                the date the report is closed.
+                            </li>
+                            <li>
+                                <strong>Audit log entries</strong> — five years, so that a dispute about an old order
+                                can still be traced.
+                            </li>
+                        </ul>
+                        <p>
+                            After that we delete the records, or strip out what identifies you and keep only totals
+                            for our own accounting.
                         </p>
                     </Section>
 
@@ -188,11 +205,50 @@ export default function Privacy() {
                     </Section>
 
                     <Section title="How to reach us">
-                        <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
-                            <strong>To be completed by the store:</strong> give the name or title of the person
-                            handling privacy questions (the Data Protection Officer), an email address, a contact
-                            number and the store&rsquo;s address. A request must reach a real person for the rights
-                            above to mean anything.
+                        <p>
+                            Write to us about anything on this page — a copy of your data, a correction, a deletion,
+                            or a complaint — and we will answer.
+                        </p>
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">
+                            <p className="font-semibold text-gray-900 dark:text-white">Data Protection Officer</p>
+                            <p className="text-gray-700 dark:text-gray-300">Mejeck IcePlant</p>
+                            <p className="mt-2">
+                                <a
+                                    href="mailto:harrismanabat3@gmail.com"
+                                    className="font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+                                >
+                                    harrismanabat3@gmail.com
+                                </a>
+                            </p>
+                            <p>
+                                <a
+                                    href="tel:+639686001910"
+                                    className="font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+                                >
+                                    +63 968 600 1910
+                                </a>
+                            </p>
+                        </div>
+                        <p>
+                            You can also use the{' '}
+                            <a href="/#contact" className="font-medium text-cyan-600 hover:underline dark:text-cyan-400">
+                                contact form
+                            </a>{' '}
+                            on our home page. Email reaches us most directly, so please use it if your request is
+                            about your own information.
+                        </p>
+                        <p>
+                            If you are not satisfied with how we handle it, you may bring the matter to the National
+                            Privacy Commission at{' '}
+                            <a
+                                href="https://privacy.gov.ph"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+                            >
+                                privacy.gov.ph
+                            </a>
+                            .
                         </p>
                     </Section>
 
