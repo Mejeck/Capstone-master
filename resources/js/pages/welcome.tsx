@@ -560,7 +560,7 @@ export default function Welcome() {
                             </div>
                             <div className="relative">
                                 <img 
-                                    src="/images/ALLIN.png" 
+                                    src="/images/ALLIN.jpg" 
                                     alt="Purified Ice Products" 
                                     className="rounded-2xl shadow-2xl w-full"
                                     onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
