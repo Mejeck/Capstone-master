@@ -197,8 +197,8 @@ export default function Register() {
                         />
                         <InputError message={errors.birthdate} />
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                            You must be at least {MINIMUM_SIGNUP_AGE} to create an account, and 18 or older to order
-                            beverages. We ask this so we can enforce that at checkout.
+                            Must be {MINIMUM_SIGNUP_AGE} or older. Also used to apply age limits on certain
+                            products, and cannot be changed once saved.
                         </p>
                     </div>
 
