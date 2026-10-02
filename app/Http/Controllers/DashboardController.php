@@ -122,6 +122,10 @@ class DashboardController extends Controller
             ->select('p.product_name', DB::raw('SUM(oi.quantity) as total_sold'), DB::raw('SUM(oi.subtotal) as total_revenue'))
             ->join('orders as o', 'oi.order_id', '=', 'o.order_id')
             ->where('o.status', '!=', 'Cancelled')
+            // A whole-order void already drops out via the status check
+            // above; this also excludes a single line voided on its own
+            // from an order that is otherwise still active.
+            ->whereNull('oi.voided_at')
             ->groupBy('p.product_id', 'p.product_name')
             ->orderBy('total_sold', 'desc')
             ->take(5)
@@ -233,6 +237,7 @@ class DashboardController extends Controller
             )
             ->whereBetween('o.order_date', [$dateFrom, $dateTo])
             ->where('o.status', '!=', 'Cancelled')
+            ->whereNull('oi.voided_at')
             ->where('p.is_active', true);
 
         // Apply category filter if selected
@@ -257,7 +262,12 @@ class DashboardController extends Controller
                 $join->on('p.product_id', '=', 'oi.product_id')
                     ->join('orders as o', 'oi.order_id', '=', 'o.order_id')
                     ->whereBetween('o.order_date', [$dateFrom, $dateTo])
-                    ->where('o.status', '!=', 'Cancelled');
+                    ->where('o.status', '!=', 'Cancelled')
+                    // A product whose only sale in the period was voided
+                    // never really moved — without this it would be hidden
+                    // from "non-moving" just because a since-reversed line
+                    // happened to match.
+                    ->whereNull('oi.voided_at');
             })
             ->leftJoin('categories as c', 'p.category_id', '=', 'c.category_id')
             ->leftJoin('inventory as i', 'p.product_id', '=', 'i.product_id')

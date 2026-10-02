@@ -19,6 +19,9 @@ class OrderItem extends Model
         'unit_price',
         'subtotal',
         'notes',
+        'voided_at',
+        'voided_by',
+        'void_reason',
     ];
 
     protected $casts = [
@@ -27,6 +30,7 @@ class OrderItem extends Model
         'subtotal' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'voided_at' => 'datetime',
     ];
 
     public $timestamps = false;
@@ -39,6 +43,16 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function voidedByUser()
+    {
+        return $this->belongsTo(User::class, 'voided_by');
+    }
+
+    public function isVoided(): bool
+    {
+        return $this->voided_at !== null;
     }
 
     public function totalValue()

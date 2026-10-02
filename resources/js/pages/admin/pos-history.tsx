@@ -35,10 +35,14 @@ interface PosHistoryProps {
             voided_by: string | null;
             void_reason: string | null;
             items: Array<{
+                order_item_id: number;
                 product_name: string;
                 quantity: number;
                 unit_price: number;
                 subtotal: number;
+                voided_at: string | null;
+                voided_by: string | null;
+                void_reason: string | null;
             }>;
         }>;
         links: Array<{
@@ -459,13 +463,14 @@ export default function PosHistory({ sales, summary, filters, cashiers }: PosHis
                                                     <th className="text-center py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">Quantity</th>
                                                     <th className="text-right py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">Unit Price</th>
                                                     <th className="text-right py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">Subtotal</th>
+                                                    <th className="text-center py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {selectedSale.items.map((item, index) => (
-                                                    <tr key={index} className="border-b border-gray-100 dark:border-gray-700">
+                                                    <tr key={index} className={`border-b border-gray-100 dark:border-gray-700 ${item.voided_at ? 'opacity-50' : ''}`}>
                                                         <td className="py-3 px-3">
-                                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            <span className={`text-sm font-medium text-gray-900 dark:text-white ${item.voided_at ? 'line-through' : ''}`}>
                                                                 {item.product_name}
                                                             </span>
                                                         </td>
@@ -483,6 +488,16 @@ export default function PosHistory({ sales, summary, filters, cashiers }: PosHis
                                                             <span className="text-sm font-medium text-gray-900 dark:text-white">
                                                                 {formatCurrency(item.subtotal)}
                                                             </span>
+                                                        </td>
+                                                        <td className="py-3 px-3 text-center">
+                                                            {item.voided_at && (
+                                                                <span
+                                                                    className="text-xs font-medium text-red-600 dark:text-red-400"
+                                                                    title={[item.voided_by, item.void_reason].filter(Boolean).join(' — ')}
+                                                                >
+                                                                    VOIDED
+                                                                </span>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}

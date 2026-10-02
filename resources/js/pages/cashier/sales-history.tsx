@@ -31,10 +31,14 @@ interface SalesHistoryProps {
             voided_at: string | null;
             void_reason: string | null;
             items: Array<{
+                order_item_id: number;
                 product_name: string;
                 quantity: number;
                 unit_price: number;
                 subtotal: number;
+                can_void: boolean;
+                voided_at: string | null;
+                void_reason: string | null;
             }>;
         }>;
         links: Array<{
@@ -55,6 +59,10 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
     // The sale currently in the "why are you voiding this" prompt, or null
     // when that prompt is closed.
     const [voidingSale, setVoidingSale] = useState<SalesHistoryProps['sales']['data'][number] | null>(null);
+    // The single line item currently in the "why are you voiding this" prompt
+    // (voidingSale and voidingItem are mutually exclusive — only one modal
+    // trigger sets its target at a time).
+    const [voidingItem, setVoidingItem] = useState<{ sale: SalesHistoryProps['sales']['data'][number]; item: SalesHistoryProps['sales']['data'][number]['items'][number] } | null>(null);
     const [voidReason, setVoidReason] = useState('');
     // Which dropdown option is picked — a preset reason (used verbatim as
     // voidReason) or OTHER_VOID_REASON, which instead reveals a free-text
@@ -64,11 +72,12 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
 
     // Close whichever modal is open with the Escape key.
     useEffect(() => {
-        if (!selectedSale && !voidingSale) return;
+        if (!selectedSale && !voidingSale && !voidingItem) return;
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key !== 'Escape') return;
-            if (voidingSale) {
+            if (voidingSale || voidingItem) {
                 setVoidingSale(null);
+                setVoidingItem(null);
                 setVoidReason('');
                 setVoidReasonPreset('');
             } else if (selectedSale) {
@@ -77,7 +86,17 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
         };
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [selectedSale, voidingSale]);
+    }, [selectedSale, voidingSale, voidingItem]);
+
+    // Keeps the open "Items Purchased" detail modal in sync with the sales
+    // list after a per-item void reloads it — without this, the modal would
+    // keep showing the stale, pre-void item state until closed and reopened.
+    useEffect(() => {
+        if (!selectedSale) return;
+        const updated = sales.data.find((s) => s.sale_id === selectedSale.sale_id);
+        if (updated) setSelectedSale(updated);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sales]);
 
     const formatCurrency = (amount: number | string) => {
         const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -100,11 +119,15 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
     };
 
     const confirmVoidSale = async () => {
-        if (!voidingSale || !voidReason.trim()) return;
+        if ((!voidingSale && !voidingItem) || !voidReason.trim()) return;
+
+        const url = voidingSale
+            ? `/cashier/sales-history/${voidingSale.sale_id}/void`
+            : `/cashier/sales-history/${voidingItem!.sale.sale_id}/items/${voidingItem!.item.order_item_id}/void`;
 
         setVoiding(true);
         try {
-            const response = await fetch(`/cashier/sales-history/${voidingSale.sale_id}/void`, {
+            const response = await fetch(url, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -118,19 +141,22 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
             const result = await response.json();
 
             if (response.ok) {
+                const wasItem = !!voidingItem;
                 setVoidingSale(null);
+                setVoidingItem(null);
                 setVoidReason('');
                 setVoidReasonPreset('');
-                // Refetch just the sales list so the row flips to "Voided"
-                // and today's totals elsewhere reflect the reversal.
+                // Refetch just the sales list so the row (and, if open, the
+                // item detail modal via the sync effect above) reflect the
+                // reversal and today's totals elsewhere.
                 router.reload({ only: ['sales'] });
-                showToast('success', 'Sale voided. Stock has been restored.');
+                showToast('success', wasItem ? 'Item voided. Stock has been restored.' : 'Sale voided. Stock has been restored.');
             } else {
-                showToast('error', result.message || 'Could not void this sale.');
+                showToast('error', result.message || 'Could not void this.');
             }
         } catch (error) {
-            console.error('Error voiding sale:', error);
-            showToast('error', 'Could not void this sale.');
+            console.error('Error voiding:', error);
+            showToast('error', 'Could not void this.');
         } finally {
             setVoiding(false);
         }
@@ -370,13 +396,14 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
                                                     <th className="text-center py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">Quantity</th>
                                                     <th className="text-right py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">Unit Price</th>
                                                     <th className="text-right py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">Subtotal</th>
+                                                    <th className="text-center py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {selectedSale.items.map((item: any, index: number) => (
-                                                    <tr key={index} className="border-b border-gray-100 dark:border-gray-700">
+                                                    <tr key={index} className={`border-b border-gray-100 dark:border-gray-700 ${item.voided_at ? 'opacity-50' : ''}`}>
                                                         <td className="py-3 px-3">
-                                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            <span className={`text-sm font-medium text-gray-900 dark:text-white ${item.voided_at ? 'line-through' : ''}`}>
                                                                 {item.product_name}
                                                             </span>
                                                         </td>
@@ -394,6 +421,21 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
                                                             <span className="text-sm font-medium text-gray-900 dark:text-white">
                                                                 {formatCurrency(item.subtotal)}
                                                             </span>
+                                                        </td>
+                                                        <td className="py-3 px-3 text-center">
+                                                            {item.voided_at ? (
+                                                                <span className="text-xs font-medium text-red-600 dark:text-red-400" title={item.void_reason || ''}>
+                                                                    VOIDED
+                                                                </span>
+                                                            ) : item.can_void ? (
+                                                                <button
+                                                                    onClick={() => { setVoidingItem({ sale: selectedSale, item }); setVoidReason(''); setVoidReasonPreset(''); }}
+                                                                    title="Void this item"
+                                                                    className="p-1.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                                                >
+                                                                    <Ban className="w-4 h-4" />
+                                                                </button>
+                                                            ) : null}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -437,18 +479,19 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
                     </div>
                 )}
 
-                {/* Void Confirmation Modal */}
-                {voidingSale && (
+                {/* Void Confirmation Modal — shared between voiding a whole
+                    sale and voiding just one of its line items. */}
+                {(voidingSale || voidingItem) && (
                     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                         <div className="bg-white dark:bg-slate-800 rounded-lg max-w-md w-full">
                             <div className="p-6">
                                 <div className="flex justify-between items-center mb-4">
                                     <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                         <Ban className="w-5 h-5 text-red-600 dark:text-red-400" />
-                                        Void Sale {voidingSale.receipt_number}
+                                        {voidingSale ? `Void Sale ${voidingSale.receipt_number}` : `Void Item: ${voidingItem!.item.product_name}`}
                                     </h2>
                                     <button
-                                        onClick={() => { setVoidingSale(null); setVoidReason(''); setVoidReasonPreset(''); }}
+                                        onClick={() => { setVoidingSale(null); setVoidingItem(null); setVoidReason(''); setVoidReasonPreset(''); }}
                                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                     >
                                         <X className="w-5 h-5 text-gray-500" />
@@ -456,8 +499,14 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
                                 </div>
 
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                    This reverses the sale of <strong>{formatCurrency(voidingSale.total_amount)}</strong> — the
-                                    items sold are returned to stock and this sale is removed from today's totals. This cannot be undone.
+                                    {voidingSale ? (
+                                        <>This reverses the sale of <strong>{formatCurrency(voidingSale.total_amount)}</strong> — the
+                                        items sold are returned to stock and this sale is removed from today's totals. This cannot be undone.</>
+                                    ) : (
+                                        <>This returns <strong>{voidingItem!.item.quantity} {voidingItem!.item.product_name}</strong> (worth{' '}
+                                        <strong>{formatCurrency(voidingItem!.item.subtotal)}</strong>) to stock and removes it from this sale's
+                                        total. This cannot be undone.</>
+                                    )}
                                 </p>
 
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -491,7 +540,7 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
 
                                 <div className="mt-6 flex justify-end gap-3">
                                     <button
-                                        onClick={() => { setVoidingSale(null); setVoidReason(''); setVoidReasonPreset(''); }}
+                                        onClick={() => { setVoidingSale(null); setVoidingItem(null); setVoidReason(''); setVoidReasonPreset(''); }}
                                         className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                     >
                                         Cancel
@@ -501,7 +550,7 @@ export default function SalesHistory({ sales }: SalesHistoryProps) {
                                         disabled={!voidReason.trim() || voiding}
                                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        {voiding ? 'Voiding...' : 'Void Sale'}
+                                        {voiding ? 'Voiding...' : (voidingSale ? 'Void Sale' : 'Void Item')}
                                     </button>
                                 </div>
                             </div>

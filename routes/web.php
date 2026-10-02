@@ -132,6 +132,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales-history', [CashierController::class, 'salesHistory'])->name('cashier.sales-history');
         Route::get('sales-history/export', [CashierController::class, 'exportSalesHistory'])->name('cashier.sales-history.export');
         Route::post('sales-history/{sale}/void', [CashierController::class, 'voidSale'])->name('cashier.sales-history.void');
+        Route::post('sales-history/{sale}/items/{orderItem}/void', [CashierController::class, 'voidSaleItem'])->name('cashier.sales-history.void-item');
         Route::get('orders', [CashierController::class, 'ordersIndex'])->name('cashier.orders');
         
         // Cashier order management API routes

@@ -91,10 +91,14 @@ class POSController extends Controller
                     'void_reason' => $sale->void_reason,
                     'items' => $sale->order->orderItems->map(function ($item) {
                         return [
+                            'order_item_id' => $item->order_item_id,
                             'product_name' => $item->product->product_name,
                             'quantity' => $item->quantity,
                             'unit_price' => $item->unit_price,
                             'subtotal' => $item->subtotal,
+                            'voided_at' => $item->voided_at?->format('M d, Y h:i A'),
+                            'voided_by' => $item->voidedByUser->full_name ?? null,
+                            'void_reason' => $item->void_reason,
                         ];
                     }),
                 ];
@@ -183,7 +187,7 @@ class POSController extends Controller
             $saleItems = [];
             foreach ($request->items as $item) {
                 // Create order item
-                OrderItem::create([
+                $orderItem = OrderItem::create([
                     'order_id' => $order->order_id,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
@@ -193,14 +197,18 @@ class POSController extends Controller
 
                 // Get product for name and inventory
                 $product = Product::find($item['product_id']);
-                
-                // Add to sale items for response
+
+                // Add to sale items for response. order_item_id lets the
+                // receipt void this one line on its own instead of only the
+                // whole sale.
                 $saleItems[] = [
+                    'order_item_id' => $orderItem->order_item_id,
                     'product_name' => $product->product_name,
                     'quantity' => $item['quantity'],
                     'unit_type' => $item['unit_type'],
                     'is_cold' => !empty($item['is_cold']),
                     'subtotal' => $item['subtotal'],
+                    'voided_at' => null,
                 ];
                 
                 $inventory = $product->inventory;

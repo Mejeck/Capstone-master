@@ -126,6 +126,9 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
     // as showConfirmSaleModal below: a native dialog isn't centered on the
     // page, and can't be styled to match the rest of the checkout flow.
     const [voidReasonModalOpen, setVoidReasonModalOpen] = useState(false);
+    // null => the modal is voiding the whole sale; otherwise the order_item_id
+    // of just the one receipt line being voided.
+    const [voidTargetItemId, setVoidTargetItemId] = useState<number | null>(null);
     const [voidReason, setVoidReason] = useState('');
     // Which dropdown option is picked — a preset reason (used verbatim as
     // voidReason) or OTHER_VOID_REASON, which instead reveals a free-text
@@ -456,6 +459,17 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
     // place (CashierController::voidSale) that actually reverses stock.
     const voidCurrentSale = () => {
         if (!currentSale?.sale_id || currentSaleVoided) return;
+        setVoidTargetItemId(null);
+        setVoidReason('');
+        setVoidReasonPreset('');
+        setVoidReasonModalOpen(true);
+    };
+
+    // Same modal, but for just one receipt line — opened from the void icon
+    // next to that item instead of the VOID button at the bottom.
+    const voidCurrentSaleItem = (orderItemId: number) => {
+        if (!currentSale?.sale_id || currentSaleVoided) return;
+        setVoidTargetItemId(orderItemId);
         setVoidReason('');
         setVoidReasonPreset('');
         setVoidReasonModalOpen(true);
@@ -464,9 +478,13 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
     const confirmVoidCurrentSale = async () => {
         if (!currentSale?.sale_id || !voidReason.trim()) return;
 
+        const url = voidTargetItemId === null
+            ? `/cashier/sales-history/${currentSale.sale_id}/void`
+            : `/cashier/sales-history/${currentSale.sale_id}/items/${voidTargetItemId}/void`;
+
         setVoiding(true);
         try {
-            const response = await fetch(`/cashier/sales-history/${currentSale.sale_id}/void`, {
+            const response = await fetch(url, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -480,18 +498,44 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
             const result = await response.json();
 
             if (response.ok) {
-                setCurrentSaleVoided(true);
+                if (voidTargetItemId === null) {
+                    setCurrentSaleVoided(true);
+                } else {
+                    // Merge the updated totals/items the backend just computed
+                    // instead of reloading. Merged per-item (not a wholesale
+                    // items-array replacement) because the backend's payload
+                    // only carries the fields it actually recomputed
+                    // (voided_at/subtotal/void_reason/...) — it has no
+                    // unit_type/is_cold to give back, since those aren't
+                    // columns on order_items at all, only present on the
+                    // items this same checkout response already put in
+                    // currentSale a moment ago.
+                    setCurrentSale(currentSale ? {
+                        ...currentSale,
+                        ...result.sale,
+                        items: currentSale.items.map((item: any) => {
+                            const updated = result.sale.items.find((ri: any) => ri.order_item_id === item.order_item_id);
+                            return updated ? { ...item, ...updated } : item;
+                        }),
+                    } : currentSale);
+                    if (result.sale_voided) {
+                        setCurrentSaleVoided(true);
+                    }
+                }
                 setVoidReasonModalOpen(false);
+                setVoidTargetItemId(null);
                 setVoidReason('');
                 setVoidReasonPreset('');
                 refreshProducts();
-                showToast('success', 'Sale voided. Stock has been restored.');
+                showToast('success', voidTargetItemId === null
+                    ? 'Sale voided. Stock has been restored.'
+                    : 'Item voided. Stock has been restored.');
             } else {
-                showToast('error', result.message || 'Could not void this sale.');
+                showToast('error', result.message || 'Could not void this.');
             }
         } catch (error) {
-            console.error('Error voiding sale:', error);
-            showToast('error', 'Could not void this sale.');
+            console.error('Error voiding:', error);
+            showToast('error', 'Could not void this.');
         } finally {
             setVoiding(false);
         }
@@ -506,8 +550,9 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
             if (voidReasonModalOpen) {
                 if (e.key === 'Escape') {
                     e.preventDefault();
-                    if (voiding) return;
+    if (voiding) return;
                     setVoidReasonModalOpen(false);
+                    setVoidTargetItemId(null);
                     setVoidReason('');
                     setVoidReasonPreset('');
                 }
@@ -1071,10 +1116,10 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
                                 <div className="flex justify-between items-center mb-4">
                                     <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                         <Ban className="w-5 h-5 text-red-600 dark:text-red-400" />
-                                        Void This Sale
+                                        {voidTargetItemId === null ? 'Void This Sale' : 'Void This Item'}
                                     </h2>
                                     <button
-                                        onClick={() => { setVoidReasonModalOpen(false); setVoidReason(''); setVoidReasonPreset(''); }}
+                                        onClick={() => { setVoidReasonModalOpen(false); setVoidTargetItemId(null); setVoidReason(''); setVoidReasonPreset(''); }}
                                         disabled={voiding}
                                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
                                     >
@@ -1114,7 +1159,7 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
 
                                 <div className="mt-6 flex justify-end gap-3">
                                     <button
-                                        onClick={() => { setVoidReasonModalOpen(false); setVoidReason(''); setVoidReasonPreset(''); }}
+                                        onClick={() => { setVoidReasonModalOpen(false); setVoidTargetItemId(null); setVoidReason(''); setVoidReasonPreset(''); }}
                                         disabled={voiding}
                                         className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
                                     >
@@ -1125,7 +1170,7 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
                                         disabled={!voidReason.trim() || voiding}
                                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        {voiding ? 'Voiding...' : 'Void Sale'}
+                                        {voiding ? 'Voiding...' : (voidTargetItemId === null ? 'Void Sale' : 'Void Item')}
                                     </button>
                                 </div>
                             </div>
@@ -1246,14 +1291,28 @@ export default function CashierPOS({ products: initialProducts, cashier_name }: 
                             <div className="mb-3 max-h-72 overflow-y-auto receipt-items-scroll">
                                 <div className="space-y-1">
                                     {currentSale.items.map((item: any, index: number) => (
-                                        <div key={index} className="border-b border-dashed border-gray-300 dark:border-gray-500 pb-1 mb-1">
-                                            <div className="flex justify-between">
-                                                <span className="font-semibold">{item.product_name.toUpperCase()}</span>
-                                                <span>{formatCurrency(item.subtotal)}</span>
+                                        <div key={index} className={`border-b border-dashed border-gray-300 dark:border-gray-500 pb-1 mb-1 ${item.voided_at ? 'opacity-50' : ''}`}>
+                                            <div className="flex justify-between items-start gap-2">
+                                                <span className={`font-semibold ${item.voided_at ? 'line-through' : ''}`}>{item.product_name.toUpperCase()}</span>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <span className={item.voided_at ? 'line-through' : ''}>{formatCurrency(item.subtotal)}</span>
+                                                    {!item.voided_at && !currentSaleVoided && item.order_item_id != null && (
+                                                        <button
+                                                            onClick={() => voidCurrentSaleItem(item.order_item_id)}
+                                                            title="Void this item"
+                                                            className="p-0.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                                        >
+                                                            <Ban className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="flex justify-between text-xs">
                                                 <span>{item.quantity} {item.unit_type.toUpperCase()}{item.is_cold ? ' (COLD)' : ''} @ {formatCurrency(item.subtotal / item.quantity)}</span>
                                             </div>
+                                            {item.voided_at && (
+                                                <p className="text-xs text-red-500 dark:text-red-400 not-italic">VOIDED{item.void_reason ? ` — ${item.void_reason}` : ''}</p>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

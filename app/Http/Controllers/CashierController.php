@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\TaxConstants;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Order;
@@ -103,12 +104,19 @@ class CashierController extends Controller
                     'can_void' => !$sale->isVoided() && $sale->created_at->isToday(),
                     'voided_at' => $sale->voided_at?->format('M d, Y h:i A'),
                     'void_reason' => $sale->void_reason,
-                    'items' => $sale->order->orderItems->map(function ($item) {
+                    'items' => $sale->order->orderItems->map(function ($item) use ($sale) {
                         return [
+                            'order_item_id' => $item->order_item_id,
                             'product_name' => $item->product->product_name,
                             'quantity' => $item->quantity,
                             'unit_price' => $item->unit_price,
                             'subtotal' => $item->subtotal,
+                            // A line can be voided on its own under the same
+                            // same-day rule as the sale, as long as neither
+                            // the line nor the whole sale is voided already.
+                            'can_void' => !$sale->isVoided() && !$item->isVoided() && $sale->created_at->isToday(),
+                            'voided_at' => $item->voided_at?->format('M d, Y h:i A'),
+                            'void_reason' => $item->void_reason,
                         ];
                     }),
                 ];
@@ -198,73 +206,251 @@ class CashierController extends Controller
             ], 422);
         }
 
-        DB::beginTransaction();
         try {
-            $order = $sale->order;
-
-            foreach ($order->orderItems as $item) {
-                $inventory = $item->product->inventory ?? null;
-                if ($inventory) {
-                    $inventory->current_quantity += $item->quantity;
-                    $inventory->save();
-
-                    StockLog::create([
-                        'product_id' => $item->product_id,
-                        'user_id' => Auth::id(),
-                        'transaction_type' => 'RETURN',
-                        'quantity' => $item->quantity,
-                        'transaction_date' => now(),
-                        'reference' => 'Void POS Sale #' . $order->order_id,
-                        'notes' => 'Sale voided: ' . $request->reason,
-                    ]);
-                }
-            }
-
-            $sale->voided_at = now();
-            $sale->voided_by = Auth::id();
-            $sale->void_reason = $request->reason;
-            $sale->save();
-
-            // Not deleted: kept as the audit trail of what was voided and
-            // why. 'Cancelled' also drops it out of any revenue totals
-            // elsewhere in the app that only count 'Completed' orders.
-            $order->status = 'Cancelled';
-            $order->save();
-
-            // Back this sale's numbers out of today's summary card so the
-            // cashier's shift totals reflect the void immediately.
-            $summary = DailyCashierSummary::getTodaySummary(Auth::id());
-            if ($summary && !$summary->isReset()) {
-                $isGcash = strtolower($order->payment_method ?? '') === 'gcash';
-
-                $summary->total_sales -= $sale->total_amount;
-                $summary->total_transactions = max(0, $summary->total_transactions - 1);
-
-                if ($isGcash) {
-                    $summary->total_non_cash_received -= $sale->total_amount;
-                } else {
-                    $summary->total_cash_received -= $sale->payment_received;
-                    $summary->total_change -= $sale->change_amount;
-                }
-
-                $summary->average_transaction = $summary->total_transactions > 0
-                    ? $summary->total_sales / $summary->total_transactions
-                    : 0;
-
-                $summary->save();
-            }
-
-            DB::commit();
+            DB::transaction(function () use ($sale, $request) {
+                $this->reverseWholeSale($sale, $request->reason);
+            });
 
             return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\Throwable $e) {
+            \Log::error('Error voiding sale #' . $saleId . ': ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error voiding sale: ' . $e->getMessage(),
+                'message' => 'Could not void this sale. Please try again.',
             ], 500);
         }
+    }
+
+    /**
+     * Void a single line of one of the cashier's own completed walk-in
+     * sales — a customer only needs one wrong item taken off a three-item
+     * receipt, not the whole transaction redone. Restores stock for that
+     * line only, and reduces the sale's own total by that line's subtotal;
+     * the rest of the sale (and the order it belongs to) stays exactly as
+     * it was.
+     *
+     * If this is the last item still active on the sale, voiding it is
+     * voiding the whole sale — it goes through the exact same reversal
+     * voidSale() uses (order cancelled, the full original cash and change
+     * backed out of the summary), rather than leaving a sale with every
+     * line voided but the sale itself not marked as such.
+     *
+     * Same restrictions as voidSale(): the cashier's own sale, from today.
+     */
+    public function voidSaleItem(Request $request, $saleId, $orderItemId)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $sale = Sale::with('order.orderItems.product.inventory')
+            ->where('recorded_by', Auth::id())
+            ->find($saleId);
+
+        if (!$sale) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sale not found.',
+            ], 404);
+        }
+
+        if ($sale->isVoided()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This sale has already been voided.',
+            ], 422);
+        }
+
+        if (!$sale->created_at->isToday()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only sales from today can be voided. Ask an admin to handle older transactions.',
+            ], 422);
+        }
+
+        $order = $sale->order;
+        $orderItem = $order->orderItems->firstWhere('order_item_id', (int) $orderItemId);
+
+        if (!$orderItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found on this sale.',
+            ], 404);
+        }
+
+        if ($orderItem->isVoided()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This item has already been voided.',
+            ], 422);
+        }
+
+        try {
+            $becameFullVoid = DB::transaction(function () use ($sale, $order, $orderItem, $request) {
+                $stillActive = $order->orderItems->whereNull('voided_at');
+
+                if ($stillActive->count() <= 1) {
+                    // This is the only item left standing — finish the job
+                    // the same way a whole-sale void does.
+                    $this->reverseWholeSale($sale, $request->reason);
+
+                    return true;
+                }
+
+                $this->reverseOrderItems($order, collect([$orderItem]), $request->reason);
+
+                $order->total_amount -= $orderItem->subtotal;
+                $order->save();
+
+                $sale->total_amount -= $orderItem->subtotal;
+                $sale->save();
+
+                // Only the revenue figure moves for a partial void —
+                // payment_received and change_amount are what physically
+                // happened at the counter for the sale's original total, and
+                // stay as a true record of that. The cashier hands the
+                // voided item's amount back to the customer directly; this
+                // only corrects what the business keeps from the sale.
+                $summary = DailyCashierSummary::getTodaySummary(Auth::id());
+                if ($summary && !$summary->isReset()) {
+                    $summary->total_sales -= $orderItem->subtotal;
+                    $summary->average_transaction = $summary->total_transactions > 0
+                        ? $summary->total_sales / $summary->total_transactions
+                        : 0;
+                    $summary->save();
+                }
+
+                return false;
+            });
+
+            return response()->json([
+                'success' => true,
+                'sale_voided' => $becameFullVoid,
+                'sale' => $this->serializeSaleForReceipt($sale->fresh('order.orderItems.product', 'recordedByUser')),
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error voiding item #' . $orderItemId . ' on sale #' . $saleId . ': ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not void this item. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * The reversal common to both a whole-sale void and a per-item void that
+     * turns out to be the sale's last remaining item: restores stock for
+     * whatever is still active, marks the sale and its order voided, and
+     * backs the sale's full current total — plus the original cash and
+     * change received — out of today's summary.
+     *
+     * Only items not already voided are reversed, so a sale that already
+     * had some lines voided one at a time doesn't have their stock restored
+     * a second time when the last line finishes the job.
+     */
+    private function reverseWholeSale(Sale $sale, string $reason): void
+    {
+        $order = $sale->order;
+        $stillActive = $order->orderItems->whereNull('voided_at');
+
+        $this->reverseOrderItems($order, $stillActive, $reason);
+
+        $sale->voided_at = now();
+        $sale->voided_by = Auth::id();
+        $sale->void_reason = $reason;
+        $sale->save();
+
+        // Not deleted: kept as the audit trail of what was voided and why.
+        // 'Cancelled' also drops it out of any revenue totals elsewhere in
+        // the app that only count 'Completed' orders.
+        $order->status = 'Cancelled';
+        $order->save();
+
+        $summary = DailyCashierSummary::getTodaySummary(Auth::id());
+        if ($summary && !$summary->isReset()) {
+            $isGcash = strtolower($order->payment_method ?? '') === 'gcash';
+
+            $summary->total_sales -= $sale->total_amount;
+            $summary->total_transactions = max(0, $summary->total_transactions - 1);
+
+            if ($isGcash) {
+                $summary->total_non_cash_received -= $sale->total_amount;
+            } else {
+                $summary->total_cash_received -= $sale->payment_received;
+                $summary->total_change -= $sale->change_amount;
+            }
+
+            $summary->average_transaction = $summary->total_transactions > 0
+                ? $summary->total_sales / $summary->total_transactions
+                : 0;
+
+            $summary->save();
+        }
+    }
+
+    /**
+     * Restores inventory for each given order item, logs the return, and
+     * marks each one voided. Shared by a whole-sale void and a single-item
+     * void so stock is always put back the same way, whichever one ran.
+     */
+    private function reverseOrderItems(Order $order, \Illuminate\Support\Collection $items, string $reason): void
+    {
+        foreach ($items as $item) {
+            $inventory = $item->product->inventory ?? null;
+            if ($inventory) {
+                $inventory->current_quantity += $item->quantity;
+                $inventory->save();
+
+                StockLog::create([
+                    'product_id' => $item->product_id,
+                    'user_id' => Auth::id(),
+                    'transaction_type' => 'RETURN',
+                    'quantity' => $item->quantity,
+                    'transaction_date' => now(),
+                    'reference' => 'Void POS Sale #' . $order->order_id,
+                    'notes' => 'Item voided: ' . $reason,
+                ]);
+            }
+
+            $item->voided_at = now();
+            $item->voided_by = Auth::id();
+            $item->void_reason = $reason;
+            $item->save();
+        }
+    }
+
+    /**
+     * The same item shape the checkout response and Sales History already
+     * send to the receipt, plus each line's own void state — so the receipt
+     * can keep showing a sale after one of its items is voided, instead of
+     * needing a full page reload to see the corrected total.
+     */
+    private function serializeSaleForReceipt(Sale $sale): array
+    {
+        $totalAmount = $sale->total_amount;
+        $subtotalWithoutVAT = TaxConstants::calculateBasePrice($totalAmount);
+        $vatAmount = TaxConstants::calculateVAT($totalAmount);
+
+        return [
+            'sale_id' => $sale->sale_id,
+            'total_amount' => $totalAmount,
+            'subtotal_without_vat' => round($subtotalWithoutVAT, 2),
+            'vat_amount' => round($vatAmount, 2),
+            'voided_at' => $sale->voided_at?->toIso8601String(),
+            'items' => $sale->order->orderItems->map(function ($item) {
+                return [
+                    'order_item_id' => $item->order_item_id,
+                    'product_name' => $item->product->product_name,
+                    'quantity' => $item->quantity,
+                    'subtotal' => $item->subtotal,
+                    'voided_at' => $item->voided_at?->toIso8601String(),
+                    'voided_by' => $item->voidedByUser->full_name ?? null,
+                    'void_reason' => $item->void_reason,
+                ];
+            }),
+        ];
     }
 
     // Order management methods for cashiers
