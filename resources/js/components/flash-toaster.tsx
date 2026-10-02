@@ -70,14 +70,14 @@ export default function FlashToaster({ initialFlash }: { initialFlash?: FlashPro
     if (toasts.length === 0) return null;
 
     return (
-        <div className="fixed top-20 inset-x-4 z-[100] flex flex-col gap-2 sm:inset-x-auto sm:right-4 sm:w-full sm:max-w-sm">
+        <div className="fixed top-20 inset-x-4 z-[100] flex flex-col gap-2 sm:inset-x-0 sm:mx-auto sm:w-full sm:max-w-md">
             {toasts.map((toast) => (
                 <div
                     key={toast.id}
                     role="status"
                     onClick={() => dismiss(toast.id)}
                     className={cn(
-                        'flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm animate-in slide-in-from-top-2 fade-in duration-300',
+                        'flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm animate-in slide-in-from-top-2 fade-in duration-300 sm:gap-4 sm:px-5 sm:py-4',
                         toast.type === 'success' &&
                             'border-green-200 bg-green-50/95 text-green-800 dark:border-green-800 dark:bg-green-900/90 dark:text-green-200',
                         toast.type === 'warning' &&
@@ -86,10 +86,10 @@ export default function FlashToaster({ initialFlash }: { initialFlash?: FlashPro
                             'border-red-200 bg-red-50/95 text-red-800 dark:border-red-800 dark:bg-red-900/90 dark:text-red-200',
                     )}
                 >
-                    {toast.type === 'success' && <CheckCircle2 className="h-5 w-5 shrink-0 text-green-500 dark:text-green-400" />}
-                    {toast.type === 'warning' && <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400" />}
-                    {toast.type === 'error' && <XCircle className="h-5 w-5 shrink-0 text-red-500 dark:text-red-400" />}
-                    <p className="text-sm font-medium leading-snug">{toast.message}</p>
+                    {toast.type === 'success' && <CheckCircle2 className="h-5 w-5 shrink-0 text-green-500 dark:text-green-400 sm:h-6 sm:w-6" />}
+                    {toast.type === 'warning' && <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400 sm:h-6 sm:w-6" />}
+                    {toast.type === 'error' && <XCircle className="h-5 w-5 shrink-0 text-red-500 dark:text-red-400 sm:h-6 sm:w-6" />}
+                    <p className="text-sm font-medium leading-snug sm:text-base">{toast.message}</p>
                 </div>
             ))}
         </div>
