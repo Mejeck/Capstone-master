@@ -9,10 +9,13 @@ use App\Support\ErrorReference;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -55,6 +58,21 @@ return Application::configure(basePath: dirname(__DIR__))
         // formatted Inertia response and swaps it in as the next page,
         // instead of falling back to its own raw-HTML error modal).
         $exceptions->renderable(function (Throwable $e, Request $request) {
+            // These three never implement HttpExceptionInterface, so without
+            // this check they would fall through to the "default to 500"
+            // line below and this handler would hijack them — showing the
+            // apology page for an ordinary wrong password or an expired
+            // form instead of Laravel's own (correct) redirect-back-with-
+            // errors behaviour. Confirmed against Laravel's own Handler:
+            // every other "expected" exception (a missing model, a denied
+            // Gate check, a stale CSRF token) is already converted to a
+            // proper HttpException with the right status before this
+            // callback ever runs, so the status-code check below handles
+            // those on its own — only these three are never converted.
+            if ($e instanceof ValidationException || $e instanceof AuthenticationException || $e instanceof HttpResponseException) {
+                return null;
+            }
+
             $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
 
             if ($status < 500) {
