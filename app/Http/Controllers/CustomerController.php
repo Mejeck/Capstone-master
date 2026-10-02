@@ -323,7 +323,7 @@ class CustomerController extends Controller
 
         $order = Order::where('order_id', $id)
             ->where('user_id', $user->id)
-            ->whereIn('order_type', ['preorder', 'delivery'])
+            ->whereIn('order_type', ['preorder', 'delivery', 'pickup'])
             ->with('orderItems')
             ->firstOrFail();
 
@@ -381,8 +381,14 @@ class CustomerController extends Controller
 
         $deliveredOrders = Order::where('user_id', $user->id)
             ->where('status', 'Delivered')
-            ->whereHas('delivery', function ($q) {
-                $q->where('delivery_status', 'Delivered');
+            // Pickup orders never get a Delivery row — no rider is ever
+            // assigned to them — so requiring one here was silently hiding
+            // every completed pickup order from this list.
+            ->where(function ($q) {
+                $q->where('order_type', 'pickup')
+                    ->orWhereHas('delivery', function ($dq) {
+                        $dq->where('delivery_status', 'Delivered');
+                    });
             })
             ->with(['orderItems.product', 'delivery'])
             ->orderBy('order_date', 'desc')

@@ -170,14 +170,14 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
             if (res.ok && isMountedRef.current) {
                 const data: PreOrder[] = await res.json();
                 const activeOrders = data.filter(o =>
-                    ['preorder', 'delivery'].includes(o.order_type) &&
+                    ['preorder', 'delivery', 'pickup'].includes(o.order_type) &&
                     ['Pending', 'Processing', 'Ready to Deliver'].includes(o.status)
                 );
                 setPreOrders(activeOrders);
 
                 // Detect orders that just transitioned to Delivered
                 const allDelivered = data.filter(o =>
-                    ['preorder', 'delivery'].includes(o.order_type) &&
+                    ['preorder', 'delivery', 'pickup'].includes(o.order_type) &&
                     ['Delivered', 'Completed'].includes(o.status)
                 );
                 const newActiveIds = new Set(activeOrders.map(o => o.order_id));
@@ -204,7 +204,7 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
 
                 // Sync cancelled orders tab
                 const allCancelled = data.filter(o =>
-                    ['preorder', 'delivery'].includes(o.order_type) &&
+                    ['preorder', 'delivery', 'pickup'].includes(o.order_type) &&
                     o.status === 'Cancelled'
                 );
                 setCancelledOrders(allCancelled);
@@ -255,6 +255,13 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
     };
 
     const stepLabels = ['Pending', 'Processing', 'Out for Delivery', 'Delivered'];
+
+    // A pickup order never goes "out for delivery" — nothing is being driven
+    // anywhere — so its tracker says "Ready for Pickup" at that step instead.
+    const getStepLabels = (orderType: string) =>
+        orderType === 'pickup'
+            ? ['Pending', 'Processing', 'Ready for Pickup', 'Delivered']
+            : stepLabels;
 
     // ── Filtered delivered orders ──────────────────────────────────────────────
 
@@ -422,7 +429,7 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
                                         <div className="px-5 pb-4">
                                             <div className="flex items-start justify-between relative">
                                                 <div className="absolute top-4 left-0 right-0 h-0.5 bg-cyan-500 z-0" />
-                                                {['Pending', 'Processing', 'Out for Delivery', 'Delivered'].map((label) => (
+                                                {getStepLabels(order.order_type).map((label) => (
                                                     <div key={label} className="flex flex-col items-center z-10 flex-1">
                                                         <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 bg-cyan-500 border-cyan-500 text-white">
                                                             <CheckCircle className="w-4 h-4" />
@@ -522,7 +529,7 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
                                                                 className="absolute top-4 left-0 h-0.5 bg-cyan-500 z-0 transition-all duration-700"
                                                                 style={{ width: `${(currentStep / (stepLabels.length - 1)) * 100}%` }}
                                                             />
-                                                            {stepLabels.map((label, index) => {
+                                                            {getStepLabels(order.order_type).map((label, index) => {
                                                                 const done = index <= currentStep;
                                                                 return (
                                                                     <div key={label} className="flex flex-col items-center z-10 flex-1">

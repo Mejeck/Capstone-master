@@ -463,7 +463,7 @@ class CashierController extends Controller
     {
         $orders = Order::with(['customer', 'user', 'orderItems.product.inventory'])
             ->where('approval_status', 'pending')
-            ->whereIn('order_type', ['preorder', 'delivery'])
+            ->whereIn('order_type', ['preorder', 'delivery', 'pickup'])
             ->orderBy('order_date', 'desc')
             ->get();
 
