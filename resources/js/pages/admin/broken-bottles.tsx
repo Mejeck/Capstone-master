@@ -6,6 +6,7 @@ import { type BreadcrumbItem } from '@/types';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { showToast } from '@/lib/toast';
+import { getCsrfHeaders } from '@/lib/csrf';
 
 interface BrokenBottle {
     id: number;
@@ -85,7 +86,6 @@ export default function BrokenBottles() {
 
     const fetchBrokenBottles = async (startDate?: string, endDate?: string) => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const params = new URLSearchParams();
             if (startDate) params.append('start_date', startDate);
             if (endDate) params.append('end_date', endDate);
@@ -93,7 +93,7 @@ export default function BrokenBottles() {
             const response = await fetch(`/admin/api/broken-bottles/reports?${params.toString()}`, {
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -107,11 +107,10 @@ export default function BrokenBottles() {
 
     const fetchStats = async () => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch('/admin/api/broken-bottles/stats', {
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -127,7 +126,6 @@ export default function BrokenBottles() {
         e.preventDefault();
         setLoading(true);
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const formDataToSend = new FormData();
             formDataToSend.append('beverage_type', formData.beverage_type);
             formDataToSend.append('quantity', formData.quantity.toString());
@@ -140,7 +138,7 @@ export default function BrokenBottles() {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
                 body: formDataToSend,
             });
@@ -213,12 +211,11 @@ export default function BrokenBottles() {
         if (!(await confirm({ message: 'Are you sure you want to delete this record?', danger: true }))) return;
 
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/admin/api/broken-bottles/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
 

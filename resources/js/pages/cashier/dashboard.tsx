@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import AppHeaderLayout from '@/layouts/app/app-header-layout';
 import { type BreadcrumbItem } from '@/types';
+import { getCsrfHeaders } from '@/lib/csrf';
 import { useState, useEffect } from 'react';
 import {
     ShoppingCart,
@@ -83,7 +84,7 @@ export default function CashierDashboard({ stats, cashier_name, daily_summary, l
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify({ notes: resetNotes }),
             });

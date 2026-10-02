@@ -26,6 +26,7 @@ import { PAYMENT_PROOF_REJECTION_REASONS, OTHER_REJECTION_REASON } from '@/const
 import { showToast } from '@/lib/toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PENDING_PAYMENTS_UPDATED_EVENT, notifyPendingPaymentsUpdated } from '@/lib/cashier-events';
+import { getCsrfHeaders } from '@/lib/csrf';
 
 interface PendingNotificationItem {
     product_name: string;
@@ -43,8 +44,6 @@ interface PendingNotification {
     delivery_address: string | null;
     order_items: PendingNotificationItem[];
 }
-
-const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
 // AppHeader (and this nav list) is currently only used by the cashier
 // portal (pos.tsx, dashboard.tsx, orders.tsx, sales-history.tsx all use
@@ -159,7 +158,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
-                    'X-CSRF-TOKEN': csrfToken(),
+                    ...getCsrfHeaders(),
                     ...(action === 'reject' ? { 'Content-Type': 'application/json' } : {}),
                 },
                 body: action === 'reject' ? JSON.stringify({ reason: rejectReason.trim() }) : undefined,

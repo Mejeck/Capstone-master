@@ -7,6 +7,7 @@ import InputError from '@/components/input-error';
 import RecaptchaCheckbox, { RecaptchaCheckboxHandle } from '@/components/recaptcha-checkbox';
 import { showToast } from '@/lib/toast';
 import { RECAPTCHA_SITE_KEY } from '@/lib/recaptcha';
+import { getCsrfHeaders } from '@/lib/csrf';
 
 interface OtpVerificationModalProps {
     isOpen: boolean;
@@ -48,9 +49,9 @@ export default function OtpVerificationModal({
         setError('');
 
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const csrfHeaders = getCsrfHeaders();
 
-            if (!csrfToken) {
+            if (!csrfHeaders['X-CSRF-TOKEN'] && !csrfHeaders['X-XSRF-TOKEN']) {
                 showToast('error', 'CSRF token not found. Please refresh the page.');
                 return;
             }
@@ -59,7 +60,7 @@ export default function OtpVerificationModal({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    ...csrfHeaders,
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ email, recaptcha_token: recaptchaToken }),
@@ -94,18 +95,18 @@ export default function OtpVerificationModal({
         setError('');
 
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            
-            if (!csrfToken) {
+            const csrfHeaders = getCsrfHeaders();
+
+            if (!csrfHeaders['X-CSRF-TOKEN'] && !csrfHeaders['X-XSRF-TOKEN']) {
                 setError('CSRF token not found. Please refresh the page.');
                 return;
             }
-            
+
             const response = await fetch(route('email-verification.verify-otp'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    ...csrfHeaders,
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ email, otp }),

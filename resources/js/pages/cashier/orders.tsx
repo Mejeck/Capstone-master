@@ -6,6 +6,7 @@ import { showToast } from '@/lib/toast';
 import { PAYMENT_PROOF_REJECTION_REASONS, OTHER_REJECTION_REASON } from '@/constants/rejectionReasons';
 import { notifyPendingPaymentsUpdated } from '@/lib/cashier-events';
 import { storageUrl } from '@/lib/storage-url';
+import { getCsrfHeaders } from '@/lib/csrf';
 import {
     Package,
     Clock,
@@ -194,9 +195,6 @@ export default function CashierOrders() {
 
     // ─── Fetch helpers ────────────────────────────────────────────────────────
 
-    const csrf = () =>
-        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
     const fetchVerification = async () => {
         setVerificationLoading(true);
         try {
@@ -314,7 +312,7 @@ export default function CashierOrders() {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
-                    'X-CSRF-TOKEN': csrf(),
+                    ...getCsrfHeaders(),
                     ...(body ? { 'Content-Type': 'application/json' } : {}),
                 },
                 body,
@@ -404,7 +402,7 @@ export default function CashierOrders() {
             const res = await fetch(`/cashier/api/customers/${userId}/block`, {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() },
+                headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
                 body: JSON.stringify({ reason }),
             });
             if (res.ok) {
@@ -425,7 +423,7 @@ export default function CashierOrders() {
             const res = await fetch(`/cashier/api/customers/${userId}/unblock`, {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: { 'X-CSRF-TOKEN': csrf() },
+                headers: { ...getCsrfHeaders() },
             });
             if (res.ok) {
                 setUnblockModal(null);
@@ -445,7 +443,7 @@ export default function CashierOrders() {
             const res = await fetch(`/cashier/api/orders/${orderId}/complete-refund`, {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() },
+                headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
                 body: JSON.stringify({ note: note || undefined }),
             });
             if (res.ok) {
@@ -472,7 +470,7 @@ export default function CashierOrders() {
         try {
             const readyRes = await fetch(`/cashier/api/orders/${markReadyModal.orderId}/mark-ready`, {
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrf() },
+                headers: { ...getCsrfHeaders() },
             });
             if (!readyRes.ok) {
                 const err = await readyRes.json().catch(() => ({}));
@@ -481,7 +479,7 @@ export default function CashierOrders() {
             }
             const assignRes = await fetch(`/cashier/api/orders/${markReadyModal.orderId}/assign-delivery`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() },
+                headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
                 body: JSON.stringify({ rider_id: markReadyRider }),
             });
             if (assignRes.ok) {
@@ -512,7 +510,7 @@ export default function CashierOrders() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf(),
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify({ rider_id: rider }),
             });
@@ -539,7 +537,7 @@ export default function CashierOrders() {
         try {
             const res = await fetch(`/cashier/api/orders/${orderId}/mark-paid`, {
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrf() },
+                headers: { ...getCsrfHeaders() },
             });
             if (res.ok) {
                 setMarkPaidModal(null);

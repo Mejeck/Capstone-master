@@ -13,6 +13,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import CustomerNav from '@/components/CustomerNav';
+import { getCsrfHeaders } from '@/lib/csrf';
 import PullToRefresh from '@/components/pull-to-refresh';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
@@ -162,10 +163,9 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
     const fetchOrders = useCallback(async (isFirst = false) => {
         if (isFirst) setPreOrdersLoading(true);
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const res = await fetch('/customer/orders', {
                 credentials: 'same-origin',
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token || '' },
+                headers: { 'Accept': 'application/json', ...getCsrfHeaders() },
             });
             if (res.ok && isMountedRef.current) {
                 const data: PreOrder[] = await res.json();

@@ -8,6 +8,7 @@ import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { showToast } from '@/lib/toast';
 import { PAYMENT_PROOF_REJECTION_REASONS, OTHER_REJECTION_REASON } from '@/constants/rejectionReasons';
 import { storageUrl } from '@/lib/storage-url';
+import { getCsrfHeaders } from '@/lib/csrf';
 
 interface OrderItem {
     order_item_id: number;
@@ -235,12 +236,11 @@ export default function PreOrders() {
 
     const fetchPendingOrders = async () => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch('/admin/api/orders/pending', {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
 
@@ -260,12 +260,11 @@ export default function PreOrders() {
 
     const fetchProcessingOrders = async () => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch('/admin/api/orders/processing', {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -279,12 +278,11 @@ export default function PreOrders() {
 
     const fetchDeliveredOrders = async () => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch('/admin/api/orders/delivered', {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -298,12 +296,11 @@ export default function PreOrders() {
 
     const fetchCompletedOrders = async () => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch('/admin/api/orders/completed', {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -317,12 +314,11 @@ export default function PreOrders() {
 
     const fetchCancelledOrders = async () => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch('/admin/api/orders/cancelled', {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -341,14 +337,13 @@ export default function PreOrders() {
     const handleCompleteRefund = async (orderId: number, note?: string) => {
         setCompletingRefundId(orderId);
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/admin/api/orders/${orderId}/complete-refund`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify({ note: note || undefined }),
             });
@@ -369,26 +364,11 @@ export default function PreOrders() {
 
     const fetchDeliveryBoys = async () => {
         try {
-            // Get CSRF token from meta tag
-            let token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            // Fallback: try to get from cookie
-            if (!token) {
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'XSRF-TOKEN') {
-                        token = decodeURIComponent(value);
-                        break;
-                    }
-                }
-            }
-
             const response = await fetch('/admin/api/delivery-boys', {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -405,27 +385,12 @@ export default function PreOrders() {
 
         setLoading(true);
         try {
-            // Get CSRF token from meta tag
-            let token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            // Fallback: try to get from cookie
-            if (!token) {
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'XSRF-TOKEN') {
-                        token = decodeURIComponent(value);
-                        break;
-                    }
-                }
-            }
-
             const response = await fetch(`/admin/api/orders/${orderId}/approve`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
 
@@ -451,28 +416,13 @@ export default function PreOrders() {
 
         setLoading(true);
         try {
-            // Get CSRF token from meta tag
-            let token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            // Fallback: try to get from cookie
-            if (!token) {
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'XSRF-TOKEN') {
-                        token = decodeURIComponent(value);
-                        break;
-                    }
-                }
-            }
-
             const response = await fetch(`/admin/api/orders/${orderId}/reject`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify({ rejection_reason: rejectReason }),
             });
@@ -506,30 +456,13 @@ export default function PreOrders() {
 
         setLoading(true);
         try {
-            // Get CSRF token from meta tag
-            let token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            // Fallback: try to get from cookie
-            if (!token) {
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'XSRF-TOKEN') {
-                        token = decodeURIComponent(value);
-                        break;
-                    }
-                }
-            }
-
-            console.log('CSRF Token:', token ? 'Present' : 'Missing');
-
             const response = await fetch(`/admin/api/orders/${orderId}/assign-delivery`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify({ rider_id: selectedDeliveryBoy }),
             });
@@ -558,27 +491,12 @@ export default function PreOrders() {
 
         setLoading(true);
         try {
-            // Get CSRF token from meta tag
-            let token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            // Fallback: try to get from cookie
-            if (!token) {
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'XSRF-TOKEN') {
-                        token = decodeURIComponent(value);
-                        break;
-                    }
-                }
-            }
-
             const response = await fetch(`/admin/api/orders/${orderId}/confirm-success`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
 
@@ -605,28 +523,13 @@ export default function PreOrders() {
 
         setLoading(true);
         try {
-            // Get CSRF token from meta tag
-            let token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            // Fallback: try to get from cookie
-            if (!token) {
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'XSRF-TOKEN') {
-                        token = decodeURIComponent(value);
-                        break;
-                    }
-                }
-            }
-
             const response = await fetch(`/admin/api/orders/${orderId}/confirm-payment`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify({ payment_status: paymentStatus }),
             });

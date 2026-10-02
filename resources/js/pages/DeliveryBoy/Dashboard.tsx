@@ -6,6 +6,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { showToast } from '@/lib/toast';
 import { MAX_UPLOAD_MB, isWithinUploadLimit } from '@/lib/uploads';
+import { getCsrfHeaders } from '@/lib/csrf';
 
 interface OrderItem {
     order_item_id: number;
@@ -133,12 +134,11 @@ export default function DeliveryBoyDashboard() {
 
     const fetchAssignedOrders = async () => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch('/delivery-boy/api/assigned-orders', {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -158,12 +158,11 @@ export default function DeliveryBoyDashboard() {
 
     const fetchCompletedDeliveries = async () => {
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch('/delivery-boy/api/completed-deliveries', {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
             if (response.ok) {
@@ -253,7 +252,6 @@ export default function DeliveryBoyDashboard() {
 
         setLoading(true);
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             const formData = new FormData();
             formData.append('delivery_status', newStatus);
@@ -270,7 +268,7 @@ export default function DeliveryBoyDashboard() {
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
                 body: formData,
             });

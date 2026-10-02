@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, ChevronDown, AlertCircle, Package, TrendingDown } from 'lucide-react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
+import { getCsrfHeaders } from '@/lib/csrf';
 
 interface BrokenBottleRecord {
     id: number;
@@ -63,7 +64,6 @@ export default function BrokenBottlesReport({ filters }: BrokenBottlesReportProp
     const fetchReports = async () => {
         setLoading(true);
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const params = new URLSearchParams();
             if (filters?.start_date) params.append('start_date', filters.start_date);
             if (filters?.end_date) params.append('end_date', filters.end_date);
@@ -72,7 +72,7 @@ export default function BrokenBottlesReport({ filters }: BrokenBottlesReportProp
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
             });
 

@@ -40,6 +40,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import QuantityInput, { toStockCount } from '@/components/customer/QuantityInput';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '@/lib/uploads';
+import { getCsrfHeaders } from '@/lib/csrf';
 
 // GCash-rejected notice acknowledgement: persisted per-user in localStorage so
 // clicking "Got it" keeps it dismissed across page loads/future visits, not
@@ -561,14 +562,13 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
 
         setIsPreOrderCheckoutProcessing(true);
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/customer/orders/${selectedPreOrder.order_id}/checkout`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': token || '',
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify({
                     payment_method: orderForm.payment_method,
