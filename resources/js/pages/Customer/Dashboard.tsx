@@ -638,6 +638,7 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
         items: activeOrderItems,
         products,
         orderForm,
+        selectedAddressId,
         onGCashCreated: (data) => {
             setShowOrderModal(false);
             setShowGCashModal(true);

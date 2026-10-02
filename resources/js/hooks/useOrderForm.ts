@@ -19,6 +19,10 @@ const INITIAL_ORDER_FORM: OrderFormState = {
     delivery_longitude: null,
     pickup_date: '',
     pickup_time: '',
+    // Checked by default: a first-time customer typing a fresh address has
+    // every reason to want it remembered, and can still uncheck it for a
+    // one-off delivery (e.g. a gift to someone else's house).
+    save_address: true,
 };
 
 interface UseOrderFormOptions {
@@ -66,6 +70,7 @@ export function useOrderForm(addresses: UserAddress[], options: UseOrderFormOpti
                 delivery_city: '',
                 delivery_province: '',
                 delivery_postal_code: '',
+                save_address: true,
             }));
             return;
         }
@@ -73,6 +78,8 @@ export function useOrderForm(addresses: UserAddress[], options: UseOrderFormOpti
         if (address) {
             setSelectedAddressId(address.id);
             applyAddressToForm(address);
+            // Already saved — nothing new to offer to remember.
+            setOrderForm(prev => ({ ...prev, save_address: false }));
         }
     };
 

@@ -8,6 +8,10 @@ interface UseSubmitOrderParams {
     items: CartItem[];
     products: PricingProduct[];
     orderForm: OrderFormState;
+    // Whether the delivery address currently in the form came from the Saved
+    // Address dropdown (a number) or is being typed fresh ('new' / ''). Only
+    // a fresh address with orderForm.save_address checked gets persisted.
+    selectedAddressId: number | 'new' | '';
     // Server responded with a GCash order — page should open its GCash proof modal.
     onGCashCreated: (data: any) => void;
     // Server responded with a Cash/COD order needing a down-payment-via-GCash
@@ -34,7 +38,7 @@ interface UseSubmitOrderParams {
 //      reachable in practice (orderType is always explicit upstream).
 //   2. The catch block keeps Dashboard's console.error(...) logging (Cart's
 //      catch was a silent no-log swallow).
-export function useSubmitOrder({ items, products, orderForm, onGCashCreated, onCodRequired, onImmediateSuccess, confirmPlaceOrder }: UseSubmitOrderParams) {
+export function useSubmitOrder({ items, products, orderForm, selectedAddressId, onGCashCreated, onCodRequired, onImmediateSuccess, confirmPlaceOrder }: UseSubmitOrderParams) {
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
     const submitOrder = async () => {
@@ -99,6 +103,35 @@ export function useSubmitOrder({ items, products, orderForm, onGCashCreated, onC
 
             if (response.ok) {
                 const data = await response.json();
+
+                // Best-effort: the order itself already succeeded, so a
+                // failure here (network blip, validation quirk) shouldn't
+                // surface as an order-placement error — it just means next
+                // order's form starts blank again, same as before this
+                // existed.
+                if (orderForm.order_type === 'delivery' && orderForm.save_address && typeof selectedAddressId !== 'number') {
+                    fetch('/customer/settings/addresses', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...getCsrfHeaders(),
+                        },
+                        body: JSON.stringify({
+                            house_no: orderForm.delivery_house_no,
+                            street: orderForm.delivery_street,
+                            barangay_name: orderForm.delivery_barangay_name,
+                            municipality: orderForm.delivery_municipality,
+                            landmark: orderForm.delivery_landmark,
+                            barangay: orderForm.delivery_barangay,
+                            purok: orderForm.delivery_purok,
+                            city: orderForm.delivery_city,
+                            province: orderForm.delivery_province,
+                            postal_code: orderForm.delivery_postal_code,
+                            is_default: true,
+                        }),
+                    }).catch(() => { /* best-effort, see comment above */ });
+                }
 
                 // GCash: show payment modal for all order types
                 if (orderForm.payment_method === 'GCash') {

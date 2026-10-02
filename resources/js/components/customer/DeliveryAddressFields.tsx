@@ -123,6 +123,23 @@ export default function DeliveryAddressFields({ orderForm, setOrderForm, address
                     required
                 />
             </div>
+            {/* Only offered while typing a fresh address — picking one from
+                the dropdown above means it's already saved. This is the one
+                place a customer learns this is possible at all; nothing else
+                in the app points at Settings > Addresses. */}
+            {typeof selectedAddressId !== 'number' && (
+                <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={orderForm.save_address}
+                        onChange={(e) => setOrderForm(prev => ({ ...prev, save_address: e.target.checked }))}
+                        className="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500"
+                    />
+                    <span>
+                        Save this address as my default, so I don't have to type it again next time.
+                    </span>
+                </label>
+            )}
         </>
     );
 }

@@ -193,6 +193,7 @@ export default function CartPage({ products, addresses = [], deliveryFeeSettings
         items: cart,
         products,
         orderForm,
+        selectedAddressId,
         onGCashCreated: (data) => {
             setShowOrderModal(false);
             setShowGCashModal(true);

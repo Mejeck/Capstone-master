@@ -48,6 +48,10 @@ export interface OrderFormState {
     delivery_longitude: number | null;
     pickup_date: string;
     pickup_time: string;
+    // Only meaningful while typing a fresh delivery address (not one picked
+    // from the Saved Address dropdown) — offers to save it as the default so
+    // it prefills automatically on the next order instead of being retyped.
+    save_address: boolean;
 }
 
 // Narrow shape `computeOrderTotal` actually needs — Dashboard's richer
