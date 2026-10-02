@@ -46,7 +46,7 @@ class SupplierController extends Controller
     {
         $request->validate([
             'supplier_name' => 'required|string|max:255',
-            'contact_person' => 'required|string|max:255',
+            'contact_person' => ['required', 'string', 'max:255', 'regex:/^[\p{L}\s.\'-]+$/u'],
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'required|string|max:500',
@@ -56,6 +56,8 @@ class SupplierController extends Controller
             'payment_terms' => 'required|string|max:50',
             'delivery_lead_time' => 'required|string|max:50',
             'notes' => 'nullable|string|max:1000',
+        ], [
+            'contact_person.regex' => 'Contact person can only contain letters, spaces, and basic punctuation (no numbers).',
         ]);
 
         try {
@@ -92,7 +94,7 @@ class SupplierController extends Controller
     {
         $request->validate([
             'supplier_name' => 'required|string|max:255',
-            'contact_person' => 'required|string|max:255',
+            'contact_person' => ['required', 'string', 'max:255', 'regex:/^[\p{L}\s.\'-]+$/u'],
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'required|string|max:500',
@@ -102,6 +104,8 @@ class SupplierController extends Controller
             'payment_terms' => 'required|string|max:50',
             'delivery_lead_time' => 'required|string|max:50',
             'notes' => 'nullable|string|max:1000',
+        ], [
+            'contact_person.regex' => 'Contact person can only contain letters, spaces, and basic punctuation (no numbers).',
         ]);
 
         try {

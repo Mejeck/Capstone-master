@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
+import { getCsrfHeaders } from '@/lib/csrf';
 import { 
     Building2, 
     Phone, 
@@ -50,6 +51,12 @@ interface SuppliersProps {
 // the page has its own heading below, so a "Dashboard > X" trail here was
 // just repeating both without adding a real path back anywhere new.
 const breadcrumbs: BreadcrumbItem[] = [];
+
+// Contact person is a name, not a free-text field — strips anything that
+// isn't a letter, space, or basic name punctuation (periods, apostrophes,
+// hyphens) as the user types, matching SupplierController's regex rule so
+// the form never lets through something the backend would reject anyway.
+const sanitizeContactPerson = (value: string) => value.replace(/[^\p{L}\s.'-]/gu, '');
 
 export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProps) {
     const [suppliers, setSuppliers] = useState(initialSuppliers);
@@ -125,7 +132,8 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify(formData),
             });
@@ -138,7 +146,8 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                 resetForm();
                 showToast('success', 'Supplier added.');
             } else {
-                alert(data.message || 'Error creating supplier');
+                const firstError = data.errors ? (Object.values(data.errors)[0] as string[])?.[0] : null;
+                alert(firstError || data.message || 'Error creating supplier');
             }
         } catch (error) {
             console.error('Error creating supplier:', error);
@@ -159,7 +168,8 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                    ...getCsrfHeaders(),
                 },
                 body: JSON.stringify(formData),
             });
@@ -173,7 +183,8 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                 resetForm();
                 showToast('success', 'Supplier updated.');
             } else {
-                alert(data.message || 'Error updating supplier');
+                const firstError = data.errors ? (Object.values(data.errors)[0] as string[])?.[0] : null;
+                alert(firstError || data.message || 'Error updating supplier');
             }
         } catch (error) {
             console.error('Error updating supplier:', error);
@@ -189,7 +200,7 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    ...getCsrfHeaders(),
                 },
             });
 
@@ -217,7 +228,7 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    ...getCsrfHeaders(),
                 },
             });
 
@@ -334,7 +345,11 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                             </p>
                         </div>
                     ) : filteredSuppliers.map((supplier) => (
-                        <div key={supplier.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+                        <div
+                            key={supplier.id}
+                            onClick={() => openEditModal(supplier)}
+                            className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 cursor-pointer"
+                        >
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -346,7 +361,7 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => handleToggleStatus(supplier)}
+                                    onClick={(e) => { e.stopPropagation(); handleToggleStatus(supplier); }}
                                     title={supplier.is_active ? 'Active — click to mark inactive' : 'Inactive — click to mark active'}
                                     className="flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                                 >
@@ -389,13 +404,13 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => openEditModal(supplier)}
+                                            onClick={(e) => { e.stopPropagation(); openEditModal(supplier); }}
                                             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                                         >
                                             <Edit className="w-4 h-4 text-blue-600" />
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteSupplier(supplier)}
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteSupplier(supplier); }}
                                             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                                         >
                                             <Trash2 className="w-4 h-4 text-red-600" />
@@ -443,7 +458,7 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                                             type="text"
                                             required
                                             value={formData.contact_person}
-                                            onChange={(e) => setFormData({...formData, contact_person: e.target.value})}
+                                            onChange={(e) => setFormData({...formData, contact_person: sanitizeContactPerson(e.target.value)})}
                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                                         />
                                     </div>
@@ -625,7 +640,7 @@ export default function Suppliers({ suppliers: initialSuppliers }: SuppliersProp
                                             type="text"
                                             required
                                             value={formData.contact_person}
-                                            onChange={(e) => setFormData({...formData, contact_person: e.target.value})}
+                                            onChange={(e) => setFormData({...formData, contact_person: sanitizeContactPerson(e.target.value)})}
                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                                         />
                                     </div>
