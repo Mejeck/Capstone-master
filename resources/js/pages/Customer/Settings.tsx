@@ -7,6 +7,7 @@ import PasswordStrengthIndicator from '@/components/password-strength-indicator'
 import { PhoneInput } from '@/components/phone-input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { MUNICIPALITIES } from '@/constants/municipalities';
+import { findMunicipalityForBarangay } from '@/constants/barangays';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { EARLIEST_BIRTHDATE, latestAllowedBirthdate } from '@/lib/birthdate';
@@ -507,7 +508,18 @@ export default function CustomerSettings({ addresses = [] }: { addresses?: UserA
                                         <input
                                             type="text"
                                             value={addressForm.data.barangay_name}
-                                            onChange={(e) => addressForm.setData('barangay_name', e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                addressForm.setData('barangay_name', val);
+                                                // Only fills in the municipality when it's still
+                                                // blank — several barangay names repeat across
+                                                // more than one of our towns, so a barangay alone
+                                                // can't safely override an existing choice.
+                                                if (!addressForm.data.municipality) {
+                                                    const detected = findMunicipalityForBarangay(val);
+                                                    if (detected) addressForm.setData('municipality', detected);
+                                                }
+                                            }}
                                             className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent w-full"
                                         />
                                         {addressForm.errors.barangay_name && (

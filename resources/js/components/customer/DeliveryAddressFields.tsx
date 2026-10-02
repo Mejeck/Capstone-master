@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { MUNICIPALITIES } from '@/constants/municipalities';
+import { findMunicipalityForBarangay } from '@/constants/barangays';
 import type { OrderFormState, UserAddress } from '@/types/customer-order';
 
 interface DeliveryAddressFieldsProps {
@@ -79,8 +80,14 @@ export default function DeliveryAddressFields({ orderForm, setOrderForm, address
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setOrderForm(prev => {
-                                    const combined = [prev.delivery_house_no, prev.delivery_street, val, prev.delivery_municipality].filter(Boolean).join(', ');
-                                    return { ...prev, delivery_barangay_name: val, delivery_address: combined };
+                                    // Only fills in the municipality when it's still blank —
+                                    // a barangay name alone can't safely override a choice
+                                    // the customer already made (several of these barangay
+                                    // names repeat across more than one of our towns).
+                                    const detected = prev.delivery_municipality ? null : findMunicipalityForBarangay(val);
+                                    const municipality = detected || prev.delivery_municipality;
+                                    const combined = [prev.delivery_house_no, prev.delivery_street, val, municipality].filter(Boolean).join(', ');
+                                    return { ...prev, delivery_barangay_name: val, delivery_municipality: municipality, delivery_address: combined };
                                 });
                             }}
                             placeholder="e.g. Concepcion"
