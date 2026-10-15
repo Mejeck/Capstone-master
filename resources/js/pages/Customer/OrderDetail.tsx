@@ -1,5 +1,8 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
+import { getOrderDisplayStatus, getStatusColor } from '@/lib/order-status';
+import { deliveryFeeLabel } from '@/lib/delivery-fee';
+import DeliveryNotes from '@/components/delivery-notes';
 import {
     Package,
     ArrowLeft,
@@ -38,8 +41,12 @@ interface Order {
     payment_method: string;
     payment_status: string;
     total_amount: number;
+    delivery_fee?: number | null;
+    delivery_municipality?: string | null;
     down_payment: number;
     delivery_address?: string;
+    delivery_landmark?: string | null;
+    delivery_remarks?: string | null;
     delivery_barangay?: string;
     delivery_purok?: string;
     delivery_city?: string;
@@ -65,15 +72,8 @@ function getStatusStep(status: string, deliveryStatus?: string): number {
 }
 
 function StatusBadge({ status }: { status: string }) {
-    const colors: Record<string, string> = {
-        Pending:    'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300',
-        Processing: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300',
-        Delivered:  'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
-        Completed:  'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
-        Cancelled:  'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300',
-    };
     return (
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${colors[status] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}`}>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(status)}`}>
             {status}
         </span>
     );
@@ -95,6 +95,9 @@ function PaymentBadge({ status }: { status: string }) {
 export default function OrderDetail({ order }: OrderDetailProps) {
     const currentStep = getStatusStep(order.status, order.delivery?.delivery_status);
     const hasDeliveryAddress = order.delivery_address && order.delivery_city;
+    // total_amount is the items only; the delivery fee is stored beside it.
+    const deliveryFee = Number(order.delivery_fee ?? 0);
+    const grandTotal = Number(order.total_amount) + deliveryFee;
 
     const deliveryAddress = [
         order.delivery_purok && `Purok ${order.delivery_purok}`,
@@ -134,7 +137,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                             </p>
                         </div>
                     </div>
-                    <StatusBadge status={order.status} />
+                    <StatusBadge status={getOrderDisplayStatus(order)} />
                 </div>
 
                 {/* ── Order Progress Timeline ── */}
@@ -200,9 +203,9 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                                 </div>
                             )}
                             <div className="flex justify-between items-center border-t border-gray-100 dark:border-slate-700 pt-3 mt-1">
-                                <span className="font-semibold text-gray-900 dark:text-white">Total Amount</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">{deliveryFee > 0 ? 'Grand Total' : 'Total Amount'}</span>
                                 <span className="font-bold text-cyan-600 dark:text-cyan-400 text-base">
-                                    ₱{Number(order.total_amount).toFixed(2)}
+                                    ₱{grandTotal.toFixed(2)}
                                 </span>
                             </div>
                         </div>
@@ -216,6 +219,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                                 Delivery Address
                             </h2>
                             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{deliveryAddress}</p>
+                            <DeliveryNotes landmark={order.delivery_landmark} remarks={order.delivery_remarks} className="mt-2" />
                             {order.delivery && (
                                 <div className="mt-4 space-y-2 text-sm">
                                     <div className="flex items-center gap-2">
@@ -246,7 +250,7 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                                                         <img
                                                             src={`/storage/${path}`}
                                                             alt={`Proof of delivery ${i + 1}`}
-                                                            className="w-full h-24 object-cover rounded-lg hover:opacity-90 transition-opacity"
+                                                            className="w-full h-40 object-cover rounded-lg hover:opacity-90 transition-opacity"
                                                         />
                                                     </a>
                                                 ))}
@@ -301,10 +305,22 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                             </div>
                         ))}
                     </div>
+                    {deliveryFee > 0 && (
+                        <div className="border-t border-gray-100 dark:border-slate-700 pt-4 pb-2 space-y-1.5 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-gray-500 dark:text-gray-400">Items Total</span>
+                                <span className="font-medium text-gray-900 dark:text-white">₱{Number(order.total_amount).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500 dark:text-gray-400">{deliveryFeeLabel(order.delivery_municipality)}</span>
+                                <span className="font-medium text-gray-900 dark:text-white">₱{deliveryFee.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    )}
                     <div className="border-t border-gray-100 dark:border-slate-700 pt-4 flex justify-between items-center">
-                        <span className="font-semibold text-gray-900 dark:text-white">Total</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{deliveryFee > 0 ? 'Grand Total' : 'Total'}</span>
                         <span className="text-xl font-bold text-cyan-600 dark:text-cyan-400">
-                            ₱{Number(order.total_amount).toFixed(2)}
+                            ₱{grandTotal.toFixed(2)}
                         </span>
                     </div>
                 </div>

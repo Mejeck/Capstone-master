@@ -6,6 +6,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { Head, useForm, router } from '@inertiajs/react';
 import { formatCurrency } from '@/constants/tax';
+import { getOrderDisplayStatus, getStatusColor } from '@/lib/order-status';
 
 // PesoSign component drawn as a lucide-style outline icon so it matches the stroke weight
 // of the other icons on this page instead of standing out as a bold filled glyph.
@@ -48,6 +49,10 @@ interface Product {
     sales_trend?: number[];
 }
 
+// Categories with their own Inventory section: a product's category is fixed
+// there, so the edit form shows it read-only.
+const LOCKED_CATEGORIES = ['Ice Tubes', 'Beverages', 'Bottles'];
+
 interface Category {
     category_id: number;
     category_name: string;
@@ -82,7 +87,10 @@ interface DashboardProps {
     }>;
     recentOrders: Array<{
         order_id: number;
-        customer: { first_name: string; last_name: string };
+        order_type: string;
+        customer?: { first_name: string; last_name: string } | null;
+        user?: { full_name: string } | null;
+        delivery?: { delivery_status: string } | null;
         total_amount: number;
         status: string;
         order_date: string;
@@ -145,6 +153,7 @@ export default function Dashboard({ stats, overallSales, products = [], categori
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [showIceAddRow, setShowIceAddRow] = useState(false);
     const [showBeverageAddRow, setShowBeverageAddRow] = useState(false);
+    const [showBottleAddRow, setShowBottleAddRow] = useState(false);
     const [showLowStockModal, setShowLowStockModal] = useState(false);
     const lowStockAlertShownRef = useRef(false);
 
@@ -244,6 +253,17 @@ export default function Dashboard({ stats, overallSales, products = [], categori
         price_per_case: '',
         price_per_case_cold: '',
         price_per_bottle: '',
+        initial_quantity: '',
+        min_stock_level: '',
+    });
+
+    // Bottles are stock-only (empties/returnables): no selling price.
+    const bottleInlineForm = useForm({
+        product_name: '',
+        category_id: '',
+        description: '',
+        unit: 'bottle',
+        price: '0',
         initial_quantity: '',
         min_stock_level: '',
     });
@@ -356,11 +376,28 @@ export default function Dashboard({ stats, overallSales, products = [], categori
         });
     };
 
+    const handleBottleInlineAdd = (e: React.FormEvent) => {
+        e.preventDefault();
+        bottleInlineForm.transform((data) => ({
+            ...data,
+            category_id: safeCategories.find(cat => cat.category_name === 'Bottles')?.category_id.toString() ?? '',
+        }));
+        bottleInlineForm.post('/admin/inventory/create-product', {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                window.location.hash = 'inventory';
+                setShowBottleAddRow(false);
+                bottleInlineForm.reset();
+            },
+        });
+    };
+
     const handleUpdateProduct = (e: React.FormEvent) => {
         e.preventDefault();
         // If editing an ice tube or beverage product, the category is locked in the UI —
         // re-apply it here since openEditModal leaves category_id blank for those products.
-        if (selectedProduct && (selectedProduct.category === 'Ice Tubes' || selectedProduct.category === 'Beverages')) {
+        if (selectedProduct && LOCKED_CATEGORIES.includes(selectedProduct.category)) {
             const lockedCategory = safeCategories.find(cat => cat.category_name === selectedProduct.category);
             if (lockedCategory) {
                 editProductForm.setData('category_id', lockedCategory.category_id.toString());
@@ -419,6 +456,7 @@ export default function Dashboard({ stats, overallSales, products = [], categori
     // Filter products into ice tubes and beverages based on category
     const iceProducts = safeProducts.filter(product => product.category === 'Ice Tubes');
     const beverageProducts = safeProducts.filter(product => product.category === 'Beverages');
+    const bottleProducts = safeProducts.filter(product => product.category === 'Bottles');
 
     const formatNumber = (value: number | string | null | undefined, decimals: number = 2): string => {
         if (value === null || value === undefined) return '0';
@@ -486,6 +524,62 @@ export default function Dashboard({ stats, overallSales, products = [], categori
             {/* Dashboard Section */}
             {activeSection === 'dashboard' && (
                 <div>
+            {/* Recent Orders — newest first, at the very top so new orders are
+                the first thing an admin sees. */}
+            <div className="mb-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 dark:border-slate-700 dark:bg-slate-800">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                    <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-100">
+                        <ShoppingCart className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                        Recent Orders
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={() => router.visit('/admin/pre-orders')}
+                        className="text-sm font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+                    >
+                        View all
+                    </button>
+                </div>
+                {recentOrders && recentOrders.length > 0 ? (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                        {recentOrders.map((order) => {
+                            const displayStatus = getOrderDisplayStatus(order);
+                            const customerName = order.customer
+                                ? `${order.customer.first_name} ${order.customer.last_name}`
+                                : order.user?.full_name || 'Unknown Customer';
+                            return (
+                                <button
+                                    key={order.order_id}
+                                    type="button"
+                                    onClick={() => router.visit('/admin/pre-orders')}
+                                    className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-700/40"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                                            Order #{order.order_id}
+                                            <span className="ml-2 font-normal text-slate-500 dark:text-slate-400 capitalize">{order.order_type}</span>
+                                        </p>
+                                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                                            {customerName} · {new Date(order.order_date).toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(displayStatus)}`}>
+                                            {displayStatus}
+                                        </span>
+                                        <span className="text-sm font-bold tabular-nums text-slate-800 dark:text-slate-100">
+                                            {formatCurrency(Number(order.total_amount))}
+                                        </span>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">No orders yet.</p>
+                )}
+            </div>
+
             {/* Overall Sales — the first thing an admin should see on opening the
                 Dashboard, so the running total doesn't require a trip to POS Sales
                 History. Same figures and treatment as the POS screen's banner. */}
@@ -717,7 +811,7 @@ export default function Dashboard({ stats, overallSales, products = [], categori
             {activeSection === 'inventory' && (
                 <div>
                     <div className="relative z-10">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
                         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-cyan-500 p-4 shadow-sm">
                             <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">{safeProducts.length}</div>
                             <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Total Products</div>
@@ -737,6 +831,14 @@ export default function Dashboard({ stats, overallSales, products = [], categori
                         >
                             <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">{beverageProducts.length}</div>
                             <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Beverages</div>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => document.getElementById('bottles-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                            className="w-full text-left bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-emerald-500 p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                        >
+                            <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">{bottleProducts.length}</div>
+                            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Bottles</div>
                         </button>
                         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-l-4 border-l-purple-500 p-4 shadow-sm">
                             <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">{safeCategories.length}</div>
@@ -1311,6 +1413,136 @@ export default function Dashboard({ stats, overallSales, products = [], categori
                         </div>
                         </div>
                     </div>
+
+                    {/* Bottles Section — empty/returnable bottles, tracked as stock only
+                        (not sold in the shop or the POS). */}
+                    <div id="bottles-section" className="mb-8 bg-white dark:bg-slate-800 rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-md p-6 relative overflow-hidden scroll-mt-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                            <div>
+                                <h2 className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                                    <Wine className="w-5 h-5 sm:w-6 sm:h-6" />
+                                    Bottles
+                                </h2>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Empty and returnable bottles on hand. Not sold to customers.</p>
+                            </div>
+                            <button
+                                onClick={() => setShowBottleAddRow(!showBottleAddRow)}
+                                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm sm:text-base w-full sm:w-auto"
+                            >
+                                {showBottleAddRow ? <X size={18} /> : <Plus size={18} />}
+                                {showBottleAddRow ? 'Cancel' : 'Add Bottle'}
+                            </button>
+                        </div>
+
+                        {showBottleAddRow && (
+                            <form onSubmit={handleBottleInlineAdd} className="mb-4 grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                                <input
+                                    type="text"
+                                    placeholder="Bottle name (e.g. Red Horse 1L empty)"
+                                    value={bottleInlineForm.data.product_name}
+                                    onChange={(e) => bottleInlineForm.setData('product_name', e.target.value)}
+                                    className="sm:col-span-2 px-3 py-2 border border-emerald-300 dark:border-emerald-700 rounded text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-700 focus:ring-2 focus:ring-emerald-500"
+                                    required
+                                />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    placeholder="Quantity"
+                                    value={bottleInlineForm.data.initial_quantity}
+                                    onChange={(e) => bottleInlineForm.setData('initial_quantity', e.target.value)}
+                                    className="px-3 py-2 border border-emerald-300 dark:border-emerald-700 rounded text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-700 focus:ring-2 focus:ring-emerald-500"
+                                    required
+                                />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    placeholder="Min Stock"
+                                    value={bottleInlineForm.data.min_stock_level}
+                                    onChange={(e) => bottleInlineForm.setData('min_stock_level', e.target.value)}
+                                    className="px-3 py-2 border border-emerald-300 dark:border-emerald-700 rounded text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-700 focus:ring-2 focus:ring-emerald-500"
+                                    required
+                                />
+                                {bottleInlineForm.errors.category_id && (
+                                    <p className="sm:col-span-4 text-sm text-red-600 dark:text-red-400">{bottleInlineForm.errors.category_id}</p>
+                                )}
+                                <div className="sm:col-span-4 flex gap-2">
+                                    <button type="submit" disabled={bottleInlineForm.processing} className="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm disabled:opacity-50">
+                                        Save
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setShowBottleAddRow(false); bottleInlineForm.reset(); }}
+                                        className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                            <table className="w-full min-w-[560px]">
+                                <thead>
+                                    <tr className="bg-slate-50 dark:bg-slate-700/50 text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500">
+                                        <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Bottle</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider">Quantity</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider">Min Stock</th>
+                                        <th className="px-3 py-3 text-left text-sm font-bold uppercase tracking-wider">Status</th>
+                                        <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-emerald-100 dark:divide-emerald-900">
+                                    {bottleProducts.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-10 text-center">
+                                                <Wine className="mx-auto h-10 w-10 text-emerald-400" />
+                                                <h3 className="mt-3 text-lg font-medium text-gray-900 dark:text-white">No bottles yet</h3>
+                                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Click "Add Bottle" to start tracking bottles.</p>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {bottleProducts.map((product) => (
+                                        <tr key={product.product_id} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition">
+                                            <td className="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white">{product.product_name}</td>
+                                            <td className="px-3 py-3 text-sm text-gray-700 dark:text-gray-300">{formatNumber(product.current_quantity, 0)}</td>
+                                            <td className="px-3 py-3 text-sm text-gray-700 dark:text-gray-300">{formatNumber(product.min_stock_level, 0)}</td>
+                                            <td className="px-3 py-3">
+                                                {product.is_low_stock ? (
+                                                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">Low Stock</span>
+                                                ) : (
+                                                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">In Stock</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 text-xs font-medium">
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        onClick={() => openAddStockModal(product)}
+                                                        className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"
+                                                    >
+                                                        <RefreshCw className="w-3 h-3" /> Manage Stock
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openEditModal(product)}
+                                                        className="flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800 rounded hover:bg-green-100 dark:hover:bg-green-900/50 transition"
+                                                    >
+                                                        <Edit className="w-3 h-3" /> Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleArchiveProduct(product.product_id)}
+                                                        className="flex items-center gap-1 px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" /> Archive
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                     </div>
                 </div>
             )}
@@ -1562,7 +1794,7 @@ export default function Dashboard({ stats, overallSales, products = [], categori
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Category
                                 </label>
-                                {selectedProduct.category === 'Ice Tubes' || selectedProduct.category === 'Beverages' ? (
+                                {LOCKED_CATEGORIES.includes(selectedProduct.category) ? (
                                     <span className="block px-3 py-2 text-gray-900 dark:text-white font-medium">{selectedProduct.category}</span>
                                 ) : (
                                     <select

@@ -323,7 +323,7 @@ export default function CustomerReports({ reports: initialReports }: CustomerRep
                                             </span>
                                             {report.action_type && (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                                                    {report.action_type === 'refund' ? 'Refund' : 'Replacement'}
+                                                    {report.action_type === 'refund' ? 'Refund' : 'Change Item'}
                                                 </span>
                                             )}
                                         </div>

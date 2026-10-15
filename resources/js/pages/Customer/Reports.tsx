@@ -84,9 +84,9 @@ export default function Reports({ reports }: ReportsProps) {
     const getReportTypeText = (type: string) => {
         switch (type) {
             case 'damaged_beverages':
-                return 'Damaged Beverages';
+                return 'Damaged Items';
             case 'wrong_product':
-                return 'Wrong Product';
+                return 'Wrong Product'; // older reports only
             case 'delivery_boy_issue':
                 return 'Delivery Boy Issue';
             case 'other':
@@ -213,7 +213,7 @@ export default function Reports({ reports }: ReportsProps) {
                                         </span>
                                         {report.action_type && (
                                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                                                {report.action_type === 'refund' ? 'Refund' : 'Replacement'}
+                                                {report.action_type === 'refund' ? 'Refund' : 'Change Item'}
                                             </span>
                                         )}
                                     </div>

@@ -8,7 +8,6 @@ import {
     Eye,
     Camera,
     AlertCircle,
-    PackageOpen,
 } from 'lucide-react';
 import CustomerNav from '@/components/CustomerNav';
 import PullToRefresh from '@/components/pull-to-refresh';
@@ -35,10 +34,9 @@ interface DeliveredOrdersProps {
 }
 
 const reportTypes = [
-    { type: 'damaged_beverages', title: 'Damaged Beverages', icon: AlertTriangle, color: 'red' },
-    { type: 'wrong_beverage',    title: 'Wrong Beverage',    icon: PackageOpen,   color: 'orange' },
-    { type: 'missing_beverage',  title: 'Missing Beverage',  icon: AlertCircle,   color: 'yellow' },
-    { type: 'other_issue',       title: 'Other Issue',       icon: AlertCircle,   color: 'gray' },
+    { type: 'damaged_beverages',  title: 'Damaged Items',      icon: AlertTriangle, color: 'red' },
+    { type: 'delivery_boy_issue', title: 'Delivery Boy Issue', icon: AlertCircle,   color: 'yellow' },
+    { type: 'other',              title: 'Other Issue',        icon: AlertCircle,   color: 'gray' },
 ];
 
 export default function DeliveredOrders({ orders }: DeliveredOrdersProps) {

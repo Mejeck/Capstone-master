@@ -8,12 +8,12 @@ import {
     Search,
     Eye,
     AlertCircle,
-    PackageOpen,
     ChevronDown,
     XCircle,
 } from 'lucide-react';
 import CustomerNav from '@/components/CustomerNav';
 import { getCsrfHeaders } from '@/lib/csrf';
+import { getOrderDisplayStatus, getStatusColor } from '@/lib/order-status';
 import PullToRefresh from '@/components/pull-to-refresh';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
@@ -79,8 +79,7 @@ interface MyOrdersProps {
 // ─── Report types shown on delivered orders ───────────────────────────────────
 
 const reportTypes = [
-    { type: 'damaged_beverages',  title: 'Damaged Beverages',  icon: AlertTriangle, color: 'red' },
-    { type: 'wrong_product',      title: 'Wrong Product',      icon: PackageOpen,   color: 'orange' },
+    { type: 'damaged_beverages',  title: 'Damaged Items',      icon: AlertTriangle, color: 'red' },
     { type: 'delivery_boy_issue', title: 'Delivery Boy Issue', icon: AlertCircle,   color: 'yellow' },
     { type: 'other',              title: 'Other Issue',        icon: AlertCircle,   color: 'gray' },
 ];
@@ -226,25 +225,6 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
     }, [fetchOrders]);
 
     // ── Helpers ────────────────────────────────────────────────────────────────
-
-    const getDisplayStatus = (order: PreOrder): string => {
-        if (order.delivery?.delivery_status === 'Out for Delivery') return 'Out for Delivery';
-        if (order.delivery?.delivery_status === 'Pending') return 'Processing';
-        if (order.status === 'Ready to Deliver') return 'Processing';
-        return order.status;
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'Completed':         return 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300';
-            case 'Delivered':         return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300';
-            case 'Out for Delivery':  return 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300';
-            case 'Processing':        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
-            case 'Pending':           return 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300';
-            case 'Cancelled':         return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
-            default: return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200';
-        }
-    };
 
     const getOrderStep = (order: PreOrder) => {
         if (order.status === 'Delivered') return 3;
@@ -486,8 +466,8 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3 flex-wrap">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(getDisplayStatus(order))}`}>
-                                                        {getDisplayStatus(order)}
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(getOrderDisplayStatus(order))}`}>
+                                                        {getOrderDisplayStatus(order)}
                                                     </span>
                                                     {order.payment_method && (
                                                         <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded">
@@ -696,8 +676,8 @@ export default function MyOrders({ deliveredOrders: initialDeliveredOrders }: My
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3 flex-wrap">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(getDisplayStatus(order))}`}>
-                                                    {getDisplayStatus(order)}
+                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(getOrderDisplayStatus(order))}`}>
+                                                    {getOrderDisplayStatus(order)}
                                                 </span>
                                                 {order.payment_status && (
                                                     <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded">

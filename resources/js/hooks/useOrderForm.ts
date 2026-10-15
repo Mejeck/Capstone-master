@@ -10,6 +10,7 @@ const INITIAL_ORDER_FORM: OrderFormState = {
     delivery_barangay_name: '',
     delivery_municipality: '',
     delivery_landmark: '',
+    delivery_remarks: '',
     delivery_barangay: '',
     delivery_purok: '',
     delivery_city: '',

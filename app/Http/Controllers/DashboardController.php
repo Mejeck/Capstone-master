@@ -69,9 +69,13 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
         
-        // Get recent orders
-        $recentOrders = Order::with(['customer'])
+        // Recent online orders, newest first, for the top of the dashboard.
+        // POS and walk-in sales are left out — they are finished at the counter
+        // and already show in the sales figures.
+        $recentOrders = Order::with(['customer', 'user', 'delivery'])
+            ->whereNotIn('order_type', ['pos', 'walkin'])
             ->orderBy('order_date', 'desc')
+            ->orderBy('order_id', 'desc')
             ->take(5)
             ->get();
         
@@ -509,7 +513,7 @@ class DashboardController extends Controller
             ->get();
 
         // Get recent orders
-        $recentOrders = Order::with(['customer', 'orderItems.product'])
+        $recentOrders = Order::with(['customer', 'orderItems.product', 'delivery'])
             ->orderBy('order_date', 'desc')
             ->take(50)
             ->get();

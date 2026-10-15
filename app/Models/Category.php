@@ -9,6 +9,9 @@ class Category extends Model
 {
     use HasFactory;
 
+    // Empty/returnable bottles: tracked in inventory, never sold.
+    const BOTTLES = 'Bottles';
+
     protected $table = 'categories';
     protected $primaryKey = 'category_id';
     

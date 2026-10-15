@@ -58,6 +58,7 @@ class CustomerController extends Controller
         // Get available products
         $products = Product::with('inventory', 'category')
             ->where('is_active', true)
+            ->sellable()
             ->get()
             ->map(function ($product) {
                 return [
@@ -121,6 +122,7 @@ class CustomerController extends Controller
     {
         $products = Product::with('inventory', 'category')
             ->where('is_active', true)
+            ->sellable()
             ->get()
             ->map(function ($product) {
                 return [
@@ -471,8 +473,12 @@ class CustomerController extends Controller
                 'payment_method' => $order->payment_method,
                 'payment_status' => $order->payment_status,
                 'total_amount' => $order->total_amount,
+                'delivery_fee' => $order->delivery_fee,
+                'delivery_municipality' => $order->delivery_municipality,
                 'down_payment' => $order->down_payment,
                 'delivery_address' => $order->delivery_address,
+                'delivery_landmark' => $order->delivery_landmark,
+                'delivery_remarks' => $order->delivery_remarks,
                 'delivery_barangay' => $order->delivery_barangay,
                 'delivery_purok' => $order->delivery_purok,
                 'delivery_city' => $order->delivery_city,

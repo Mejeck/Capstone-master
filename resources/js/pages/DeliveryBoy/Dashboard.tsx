@@ -7,6 +7,7 @@ import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { showToast } from '@/lib/toast';
 import { MAX_UPLOAD_MB, isWithinUploadLimit } from '@/lib/uploads';
 import { getCsrfHeaders } from '@/lib/csrf';
+import DeliveryNotes from '@/components/delivery-notes';
 
 interface OrderItem {
     order_item_id: number;
@@ -43,6 +44,8 @@ interface Order {
     payment_method: string;
     payment_status: string;
     delivery_address: string;
+    delivery_landmark: string | null;
+    delivery_remarks: string | null;
     delivery_barangay: string;
     delivery_purok: string;
     delivery_city: string;
@@ -514,6 +517,7 @@ export default function DeliveryBoyDashboard() {
                                         <div className="flex-1">
                                             <p>{selectedDelivery.order?.delivery_address || 'No address provided'}</p>
                                             <p>{selectedDelivery.order?.delivery_city || ''}, {selectedDelivery.order?.delivery_province || ''} {selectedDelivery.order?.delivery_postal_code || ''}</p>
+                                            <DeliveryNotes landmark={selectedDelivery.order?.delivery_landmark} remarks={selectedDelivery.order?.delivery_remarks} className="mt-1" />
                                             {selectedDelivery.order?.delivery_latitude && selectedDelivery.order?.delivery_longitude && (
                                                 <p className="text-xs text-cyan-600 dark:text-cyan-400">
                                                     Lat: {Number(selectedDelivery.order.delivery_latitude).toFixed(6)}, Lng: {Number(selectedDelivery.order.delivery_longitude).toFixed(6)}

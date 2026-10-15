@@ -7,13 +7,14 @@ interface OrderSummaryListProps {
     vatAmount: number;
     total: number;
     deliveryFee: number;
+    deliveryFeeLabel?: string;
     grandTotal: number;
     showDeliveryFee: boolean;
 }
 
 // Order summary card inside the checkout modal (not Cart.tsx's page-level
 // cart list, which is out of scope and stays untouched).
-export default function OrderSummaryList({ items, products, subtotalExclVAT, vatAmount, total, deliveryFee, grandTotal, showDeliveryFee }: OrderSummaryListProps) {
+export default function OrderSummaryList({ items, products, subtotalExclVAT, vatAmount, total, deliveryFee, deliveryFeeLabel = 'Delivery Fee', grandTotal, showDeliveryFee }: OrderSummaryListProps) {
     return (
         <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Order Summary</h3>
@@ -64,7 +65,7 @@ export default function OrderSummaryList({ items, products, subtotalExclVAT, vat
                     </div>
                     {showDeliveryFee && (
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">Delivery Fee:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{deliveryFeeLabel}:</span>
                             <span className="font-medium text-gray-900 dark:text-white">₱{deliveryFee.toFixed(2)}</span>
                         </div>
                     )}

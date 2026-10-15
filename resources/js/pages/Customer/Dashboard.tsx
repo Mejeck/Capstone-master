@@ -18,7 +18,7 @@ import { router } from '@inertiajs/react';
 import { type SharedData } from '@/types';
 import CustomerNav from '@/components/CustomerNav';
 import { getCartStorageKey } from '@/lib/cart';
-import { getStatusColor } from '@/lib/order-status';
+import { getOrderDisplayStatus, getStatusColor } from '@/lib/order-status';
 import { computeOrderTotal, useOrderTotals } from '@/hooks/useOrderTotals';
 import { useOrderForm } from '@/hooks/useOrderForm';
 import { usePreOrders } from '@/hooks/usePreOrders';
@@ -632,6 +632,7 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
         subtotalExclVAT: activeOrderSubtotalExclVAT,
         vatAmount: activeOrderVATAmount,
         deliveryFee: activeOrderDeliveryFee,
+        deliveryFeeLabel: activeOrderDeliveryFeeLabel,
         grandTotal: activeOrderGrandTotal,
     } = useOrderTotals(activeOrderItems, products, orderForm, deliveryFeeSettings);
     const { submitOrder, isPlacingOrder } = useSubmitOrder({
@@ -703,8 +704,8 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3 sm:gap-4">
-                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                                    {order.status}
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(getOrderDisplayStatus(order))}`}>
+                                                    {getOrderDisplayStatus(order)}
                                                 </span>
                                                 <span className="font-bold text-gray-900 dark:text-white text-sm">₱{Number(order.total_amount).toFixed(2)}</span>
                                                 <Link
@@ -1137,6 +1138,7 @@ export default function CustomerDashboard({ recentOrders, products, categories, 
                                     vatAmount={activeOrderVATAmount}
                                     total={activeOrderTotal}
                                     deliveryFee={activeOrderDeliveryFee}
+                                    deliveryFeeLabel={activeOrderDeliveryFeeLabel}
                                     grandTotal={activeOrderGrandTotal}
                                     showDeliveryFee={orderForm.order_type === 'delivery'}
                                 />

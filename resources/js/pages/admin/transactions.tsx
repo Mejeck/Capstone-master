@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import { getOrderDisplayStatus, getStatusColor } from '@/lib/order-status';
 import { type BreadcrumbItem } from '@/types';
 import { History, Package, ShoppingCart, TrendingUp, ArrowUpDown, Calendar, User, Filter, Search, ArrowUpRight, ArrowDownRight, Plus, Minus, RefreshCw, Wine, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -189,21 +190,6 @@ export default function Transactions({
             case 'STOCK_OUT':
                 return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200';
             case 'RETURN':
-                return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200';
-            default:
-                return 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200';
-        }
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'Completed':
-                return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200';
-            case 'Pending':
-                return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200';
-            case 'Cancelled':
-                return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200';
-            case 'Out for Delivery':
                 return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200';
             default:
                 return 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200';
@@ -425,8 +411,8 @@ export default function Transactions({
                                                 <span className="font-bold text-purple-600 dark:text-purple-400">₱{Number(order.total_amount).toFixed(2)}</span>
                                             </td>
                                             <td className="py-4 px-4">
-                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                                    {order.status}
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(getOrderDisplayStatus(order))}`}>
+                                                    {getOrderDisplayStatus(order)}
                                                 </span>
                                             </td>
                                         </tr>

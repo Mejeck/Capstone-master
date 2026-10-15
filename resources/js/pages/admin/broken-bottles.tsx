@@ -467,7 +467,7 @@ export default function BrokenBottles() {
                                                             <img
                                                                 src={bottle.image_path}
                                                                 alt="Proof"
-                                                                className="w-16 h-16 object-cover rounded-lg border border-gray-300 dark:border-gray-600 hover:opacity-80 transition-opacity"
+                                                                className="w-24 h-24 object-cover rounded-lg border border-gray-300 dark:border-gray-600 hover:opacity-80 transition-opacity"
                                                             />
                                                         </a>
                                                     ) : (

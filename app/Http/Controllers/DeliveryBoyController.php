@@ -264,15 +264,9 @@ class DeliveryBoyController extends Controller
     private function mapDeliveryIssuesToReportType($issues)
     {
         // Map delivery issues to customer report types
-        if (in_array('damaged_items', $issues)) {
-            return 'damaged_beverages';
-        } elseif (in_array('wrong_items', $issues)) {
-            return 'wrong_product';
-        } elseif (in_array('missing_items', $issues)) {
-            return 'missing_items';
-        } else {
-            return 'other';
-        }
+        // "Wrong items" is no longer a report type, so anything other than
+        // damage is filed as "other".
+        return in_array('damaged_items', $issues) ? 'damaged_beverages' : 'other';
     }
 
     public function settings(): \Inertia\Response|RedirectResponse

@@ -44,7 +44,7 @@ class CustomerReportController extends Controller
             return back()->with('error', 'A report already exists for this order.');
         }
 
-        $validTypes = ['damaged_beverages', 'wrong_product', 'delivery_boy_issue', 'other'];
+        $validTypes = ['damaged_beverages', 'delivery_boy_issue', 'other'];
         $defaultType = in_array($request->query('report_type'), $validTypes)
             ? $request->query('report_type')
             : '';
@@ -60,7 +60,7 @@ class CustomerReportController extends Controller
         $request->validate([
             'order_id' => 'required|exists:orders,order_id',
             'description' => 'required|string|min:10|max:1000',
-            'report_type' => 'required|in:damaged_beverages,wrong_product,delivery_boy_issue,other',
+            'report_type' => 'required|in:damaged_beverages,delivery_boy_issue,other',
             'delivery_boy_name' => 'nullable|string|max:255',
             'delivery_boy_issue_details' => 'nullable|string|max:1000',
             'evidence' => 'required|array|min:1',

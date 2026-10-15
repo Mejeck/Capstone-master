@@ -40,6 +40,17 @@ class Product extends Model
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    /**
+     * Products that can be sold: everything except the Bottles category,
+     * which is inventory only (empties and returnables).
+     */
+    public function scopeSellable($query)
+    {
+        return $query->whereDoesntHave('category', function ($q) {
+            $q->where('category_name', Category::BOTTLES);
+        });
+    }
+
     public function inventory()
     {
         return $this->hasOne(Inventory::class, 'product_id');

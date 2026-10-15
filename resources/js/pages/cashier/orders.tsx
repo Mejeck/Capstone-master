@@ -7,6 +7,8 @@ import { PAYMENT_PROOF_REJECTION_REASONS, OTHER_REJECTION_REASON } from '@/const
 import { notifyPendingPaymentsUpdated } from '@/lib/cashier-events';
 import { storageUrl } from '@/lib/storage-url';
 import { getCsrfHeaders } from '@/lib/csrf';
+import { getOrderDisplayStatus, getStatusColor } from '@/lib/order-status';
+import DeliveryNotes from '@/components/delivery-notes';
 import {
     Package,
     Clock,
@@ -84,6 +86,8 @@ interface Order {
     approval_status: string;
     order_type: string;
     delivery_address?: string;
+    delivery_landmark?: string | null;
+    delivery_remarks?: string | null;
     order_date: string;
     notes?: string;
     gcash_screenshot?: string | null;
@@ -562,20 +566,6 @@ export default function CashierOrders() {
         return `₱${n.toFixed(2)}`;
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-            case 'Processing': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-            case 'Ready to Deliver': return 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300';
-            case 'Ready for Pickup': return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300';
-            case 'Out for Delivery': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
-            case 'Completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-            case 'Delivered': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
-            case 'Cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
-        }
-    };
-
     const customerName = (order: Order) =>
         order.order_type === 'pos' ? 'Walk-in Customer' : (order.customer?.full_name || order.user?.full_name || 'Unknown');
 
@@ -723,7 +713,7 @@ export default function CashierOrders() {
                                 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                                 : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                     }`}>{order.payment_status}</span>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getStatusColor(order.status)}`}>{order.status}</span>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getStatusColor(getOrderDisplayStatus(order))}`}>{getOrderDisplayStatus(order)}</span>
                 </div>
 
                 {order.refund_status === 'requested' && (
@@ -872,8 +862,8 @@ export default function CashierOrders() {
                     <Truck className="w-4 h-4 text-indigo-500" />
                     <span className="font-medium">{order.delivery?.rider?.full_name ?? '—'}</span>
                 </div>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getStatusColor(order.delivery?.delivery_status ?? order.status)}`}>
-                    {order.delivery?.delivery_status ?? order.status}
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getStatusColor(getOrderDisplayStatus(order))}`}>
+                    {getOrderDisplayStatus(order)}
                 </span>
             </div>
             <button
@@ -1462,14 +1452,14 @@ export default function CashierOrders() {
                                                     <img
                                                         src={proof}
                                                         alt="Payment proof"
-                                                        className="h-28 sm:h-24 w-auto rounded-lg border border-gray-200 dark:border-gray-600 object-contain group-hover:opacity-70 transition-opacity"
+                                                        className="h-48 w-auto max-w-full rounded-lg border border-gray-200 dark:border-gray-600 object-contain group-hover:opacity-70 transition-opacity"
                                                     />
                                                     <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <ZoomIn className="w-6 h-6 text-white drop-shadow" />
                                                     </span>
                                                 </button>
                                             ) : (
-                                                <div className="h-28 sm:h-24 w-24 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                                                <div className="h-48 w-36 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center">
                                                     <span className="text-xs text-gray-400 dark:text-gray-500">No proof</span>
                                                 </div>
                                             );
@@ -1631,7 +1621,7 @@ export default function CashierOrders() {
                                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{new Date(selectedOrder.order_date).toLocaleString()}</p>
                                         </div>
                                         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-                                            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${getStatusColor(selectedOrder.status)}`}>{selectedOrder.status}</span>
+                                            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${getStatusColor(getOrderDisplayStatus(selectedOrder))}`}>{getOrderDisplayStatus(selectedOrder)}</span>
                                             <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
                                                 selectedOrder.payment_status === 'Paid' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                                 : selectedOrder.payment_status === 'Partial' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
@@ -1668,7 +1658,7 @@ export default function CashierOrders() {
                                         <div>
                                             <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5"><CreditCard className="w-3.5 h-3.5 text-cyan-500" /> GCash Proof</h4>
                                             <button onClick={() => setLightboxImage(storageUrl(selectedOrder.gcash_screenshot)!)} className="relative group focus:outline-none">
-                                                <img src={storageUrl(selectedOrder.gcash_screenshot)!} alt="GCash receipt" className="h-32 w-auto rounded-lg border border-gray-200 dark:border-gray-600 object-contain group-hover:opacity-70 transition-opacity" />
+                                                <img src={storageUrl(selectedOrder.gcash_screenshot)!} alt="GCash receipt" className="h-48 w-auto max-w-full rounded-lg border border-gray-200 dark:border-gray-600 object-contain group-hover:opacity-70 transition-opacity" />
                                                 <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><ZoomIn className="w-7 h-7 text-white drop-shadow" /></span>
                                             </button>
                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Click to view full size</p>
@@ -1681,6 +1671,7 @@ export default function CashierOrders() {
                                         <div>
                                             <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Delivery Address</h4>
                                             <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-4 py-3">{selectedOrder.delivery_address}</p>
+                                            <DeliveryNotes landmark={selectedOrder.delivery_landmark} remarks={selectedOrder.delivery_remarks} className="mt-2 px-1" />
                                         </div>
                                     </>
                                 )}

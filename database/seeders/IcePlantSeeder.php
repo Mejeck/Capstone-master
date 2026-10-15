@@ -47,6 +47,7 @@ class IcePlantSeeder extends Seeder
             ['category_name' => 'Block Ice', 'description' => 'Large blocks for industrial use'],
             ['category_name' => 'Dry Ice', 'description' => 'Solid carbon dioxide for special applications'],
             ['category_name' => 'Beverages', 'description' => 'Alcoholic beverages'],
+            ['category_name' => 'Bottles', 'description' => 'Empty and returnable bottles (stock only, not sold)'],
         ];
 
         foreach ($categories as $category) {

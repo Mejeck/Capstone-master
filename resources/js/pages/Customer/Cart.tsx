@@ -163,6 +163,7 @@ export default function CartPage({ products, addresses = [], deliveryFeeSettings
         subtotalExclVAT: cartSubtotalExclVAT,
         vatAmount: cartVATAmount,
         deliveryFee: cartDeliveryFee,
+        deliveryFeeLabel: cartDeliveryFeeLabel,
         grandTotal: cartGrandTotal,
     } = useOrderTotals(cart, products, orderForm, deliveryFeeSettings);
 
@@ -460,6 +461,7 @@ export default function CartPage({ products, addresses = [], deliveryFeeSettings
                                     vatAmount={cartVATAmount}
                                     total={cartTotal}
                                     deliveryFee={cartDeliveryFee}
+                                    deliveryFeeLabel={cartDeliveryFeeLabel}
                                     grandTotal={cartGrandTotal}
                                     showDeliveryFee={orderForm.order_type === 'delivery'}
                                 />

@@ -39,6 +39,9 @@ export interface OrderFormState {
     delivery_barangay_name: string;
     delivery_municipality: string;
     delivery_landmark: string;
+    // Free-text notes for the rider (house no., street, gate color...). Per
+    // order, not part of a saved address.
+    delivery_remarks: string;
     delivery_barangay: string;
     delivery_purok: string;
     delivery_city: string;

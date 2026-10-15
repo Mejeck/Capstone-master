@@ -29,6 +29,7 @@ class Order extends Model
         'delivery_address',
         'delivery_municipality',
         'delivery_landmark',
+        'delivery_remarks',
         'delivery_barangay',
         'delivery_purok',
         'delivery_city',

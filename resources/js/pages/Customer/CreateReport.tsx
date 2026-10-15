@@ -10,7 +10,6 @@ import {
     CheckCircle,
     FileText,
     User,
-    Package,
     Truck,
     AlertTriangle,
     Clock
@@ -182,7 +181,7 @@ export default function CreateReport({ order, defaultType = '' }: CreateReportPr
                     </Link>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Report Delivery Issue</h1>
                     <p className="mt-2 text-gray-600 dark:text-gray-400">
-                        Report problems with your delivered order - wrong products, delivery issues, or damaged items
+                        Report problems with your delivered order - damaged items or delivery issues
                     </p>
                 </div>
 
@@ -232,28 +231,8 @@ export default function CreateReport({ order, defaultType = '' }: CreateReportPr
                                     <div className="flex items-center gap-3">
                                         <AlertTriangle className="w-6 h-6 text-red-500" />
                                         <div>
-                                            <h3 className="font-semibold text-gray-900 dark:text-white">Damaged Beverages</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Products were damaged during delivery</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </label>
-
-                            <label className="relative cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="report_type"
-                                    value="wrong_product"
-                                    checked={data.report_type === 'wrong_product'}
-                                    onChange={(e) => setData('report_type', e.target.value)}
-                                    className="peer sr-only"
-                                />
-                                <div className="p-4 border-2 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 peer-checked:border-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <Package className="w-6 h-6 text-orange-500" />
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900 dark:text-white">Wrong Product</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Received different items than ordered</p>
+                                            <h3 className="font-semibold text-gray-900 dark:text-white">Damaged Items</h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Items arrived damaged (e.g. broken bottles)</p>
                                         </div>
                                     </div>
                                 </div>
@@ -299,6 +278,9 @@ export default function CreateReport({ order, defaultType = '' }: CreateReportPr
                                 </div>
                             </label>
                         </div>
+                        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                            Change Item policy: a valid report is settled by changing the damaged item. Refunds are not given.
+                        </p>
                         {errors.report_type && (
                             <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.report_type}</p>
                         )}
@@ -352,8 +334,6 @@ export default function CreateReport({ order, defaultType = '' }: CreateReportPr
                                 placeholder={
                                     data.report_type === 'damaged_beverages' 
                                         ? "Describe which products were damaged, how many, and the extent of damage..."
-                                        : data.report_type === 'wrong_product'
-                                        ? "Describe which products were wrong, what you received instead, and any other details..."
                                         : data.report_type === 'delivery_boy_issue'
                                         ? "Describe the delivery boy's behavior, timing, communication, or other service issues..."
                                         : "Describe the issue with your delivery in detail..."

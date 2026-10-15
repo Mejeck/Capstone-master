@@ -9,6 +9,9 @@ import { showToast } from '@/lib/toast';
 import { PAYMENT_PROOF_REJECTION_REASONS, OTHER_REJECTION_REASON } from '@/constants/rejectionReasons';
 import { storageUrl } from '@/lib/storage-url';
 import { getCsrfHeaders } from '@/lib/csrf';
+import { getOrderDisplayStatus, getStatusColor } from '@/lib/order-status';
+import { deliveryFeeLabel } from '@/lib/delivery-fee';
+import DeliveryNotes from '@/components/delivery-notes';
 
 interface OrderItem {
     order_item_id: number;
@@ -56,6 +59,8 @@ interface Order {
     user_id: number;
     order_date: string;
     total_amount: number;
+    delivery_fee: number | null;
+    delivery_municipality: string | null;
     status: string;
     payment_method: string;
     payment_status: string;
@@ -70,6 +75,8 @@ interface Order {
     refund_completed_at: string | null;
     refund_note: string | null;
     delivery_address: string;
+    delivery_landmark: string | null;
+    delivery_remarks: string | null;
     delivery_barangay: string;
     delivery_purok: string;
     delivery_city: string;
@@ -552,27 +559,17 @@ export default function PreOrders() {
         }
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'Pending': return 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-200';
-            case 'Processing': return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200';
-            case 'Delivered': return 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-200';
-            case 'Completed': return 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-200';
-            case 'Ready to Deliver': return 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-200';
-            case 'Cancelled': return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-200';
-            default: return 'bg-gray-100 dark:bg-gray-700/40 text-gray-700 dark:text-gray-200';
-        }
-    };
-
     // Now that the status pill is gone from the card, the border color is the only
-    // at-a-glance signal for where an order stands — mirrors getStatusColor's palette.
+    // at-a-glance signal for where an order stands — mirrors lib/order-status's getStatusColor palette.
     const getStatusBorderColor = (status: string) => {
         switch (status) {
             case 'Pending': return 'border-yellow-300 dark:border-yellow-700';
             case 'Processing': return 'border-blue-300 dark:border-blue-700';
-            case 'Delivered': return 'border-green-300 dark:border-green-700';
-            case 'Completed': return 'border-indigo-300 dark:border-indigo-700';
+            case 'Delivered': return 'border-emerald-300 dark:border-emerald-700';
+            case 'Completed': return 'border-green-300 dark:border-green-700';
             case 'Ready to Deliver': return 'border-purple-300 dark:border-purple-700';
+            case 'Ready for Pickup': return 'border-cyan-300 dark:border-cyan-700';
+            case 'Out for Delivery': return 'border-indigo-300 dark:border-indigo-700';
             case 'Cancelled': return 'border-red-300 dark:border-red-700';
             default: return 'border-gray-100 dark:border-slate-700';
         }
@@ -581,7 +578,7 @@ export default function PreOrders() {
     const renderOrderCard = (order: Order) => (
         <div
             key={order.order_id}
-            className={`bg-white dark:bg-slate-800 rounded-xl p-4 border-2 ${getStatusBorderColor(order.status)} shadow-sm cursor-pointer`}
+            className={`bg-white dark:bg-slate-800 rounded-xl p-4 border-2 ${getStatusBorderColor(getOrderDisplayStatus(order))} shadow-sm cursor-pointer`}
             onClick={() => setSelectedOrder(order)}
         >
             <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
@@ -721,8 +718,8 @@ export default function PreOrders() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                                 <div>
                                     <span className="text-gray-500 dark:text-gray-400">Status:</span>
-                                    <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
-                                        {selectedOrder.status}
+                                    <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(getOrderDisplayStatus(selectedOrder))}`}>
+                                        {getOrderDisplayStatus(selectedOrder)}
                                     </span>
                                 </div>
                                 <div>
@@ -735,12 +732,31 @@ export default function PreOrders() {
                                         {new Date(selectedOrder.order_date).toLocaleString()}
                                     </span>
                                 </div>
-                                <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Total:</span>
-                                    <span className="ml-2 text-cyan-600 dark:text-cyan-400 font-bold">
-                                        ₱{Number(selectedOrder.total_amount).toFixed(2)}
-                                    </span>
-                                </div>
+                                {Number(selectedOrder.delivery_fee ?? 0) > 0 ? (
+                                    <>
+                                        <div>
+                                            <span className="text-gray-500 dark:text-gray-400">Items Total:</span>
+                                            <span className="ml-2 text-gray-900 dark:text-white">₱{Number(selectedOrder.total_amount).toFixed(2)}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 dark:text-gray-400">{deliveryFeeLabel(selectedOrder.delivery_municipality)}:</span>
+                                            <span className="ml-2 text-gray-900 dark:text-white">₱{Number(selectedOrder.delivery_fee).toFixed(2)}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 dark:text-gray-400">Grand Total:</span>
+                                            <span className="ml-2 text-cyan-600 dark:text-cyan-400 font-bold">
+                                                ₱{(Number(selectedOrder.total_amount) + Number(selectedOrder.delivery_fee)).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div>
+                                        <span className="text-gray-500 dark:text-gray-400">Total:</span>
+                                        <span className="ml-2 text-cyan-600 dark:text-cyan-400 font-bold">
+                                            ₱{Number(selectedOrder.total_amount).toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Customer and the payment proof sit side by side —
@@ -763,6 +779,7 @@ export default function PreOrders() {
                                                 {cityLine && <><br />{cityLine}</>}
                                             </span>
                                         </p>
+                                        <DeliveryNotes landmark={selectedOrder.delivery_landmark} remarks={selectedOrder.delivery_remarks} className="pl-6" />
                                     </div>
                                 </div>
 
@@ -777,7 +794,7 @@ export default function PreOrders() {
                                             <img
                                                 src={proofUrl}
                                                 alt="Payment proof"
-                                                className="h-28 sm:h-24 w-auto rounded-lg border border-gray-200 dark:border-gray-600 object-contain group-hover:opacity-70 transition-opacity"
+                                                className="h-48 w-auto max-w-full rounded-lg border border-gray-200 dark:border-gray-600 object-contain group-hover:opacity-70 transition-opacity"
                                             />
                                             <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <ZoomIn className="w-6 h-6 text-white drop-shadow" />

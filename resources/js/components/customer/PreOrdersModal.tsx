@@ -1,5 +1,5 @@
 import { CheckCircle, Clock, Package, X } from 'lucide-react';
-import { getStatusColor } from '@/lib/order-status';
+import { getOrderDisplayStatus, getStatusColor } from '@/lib/order-status';
 import type { PreOrderSummary } from '@/types/customer-order';
 
 interface PreOrdersModalProps<T extends PreOrderSummary> {
@@ -65,8 +65,8 @@ export default function PreOrdersModal<T extends PreOrderSummary>({ open, onClos
                                             </div>
                                         </div>
                                         <div className="flex items-center space-x-4">
-                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                                                {order.status}
+                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(getOrderDisplayStatus(order))}`}>
+                                                {getOrderDisplayStatus(order)}
                                             </span>
                                             <span className="font-bold text-gray-900 dark:text-white">₱{Number(order.total_amount).toFixed(2)}</span>
                                         </div>
@@ -74,8 +74,8 @@ export default function PreOrdersModal<T extends PreOrderSummary>({ open, onClos
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                         <div>
                                             <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                                            <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${getStatusColor(order.status)}`}>
-                                                {order.status}
+                                            <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${getStatusColor(getOrderDisplayStatus(order))}`}>
+                                                {getOrderDisplayStatus(order)}
                                             </span>
                                         </div>
                                         <div>

@@ -1,5 +1,6 @@
 import { TAX_CONSTANTS } from '@/constants/tax';
 import type { CartItem, OrderFormState, PricingProduct } from '@/types/customer-order';
+import { deliveryFeeLabel, isInTown } from '@/lib/delivery-fee';
 
 export interface DeliveryFeeSettings {
     in_town_fee: number;
@@ -43,6 +44,8 @@ export interface OrderTotals {
     subtotalExclVAT: number;
     vatAmount: number;
     deliveryFee: number;
+    /** Says where the fee comes from, e.g. "Delivery Fee (Peñaranda, in-town)". */
+    deliveryFeeLabel: string;
     grandTotal: number;
 }
 
@@ -58,12 +61,12 @@ export function useOrderTotals(
     const total = computeOrderTotal(items, products);
     const subtotalExclVAT = TAX_CONSTANTS.calculateBasePrice(total);
     const vatAmount = TAX_CONSTANTS.calculateVAT(total);
+    const inTownMunicipality = deliveryFeeSettings?.in_town_municipality;
     const deliveryFee = (orderForm.order_type === 'delivery' && deliveryFeeSettings)
-        ? (orderForm.delivery_municipality === deliveryFeeSettings.in_town_municipality
-            ? deliveryFeeSettings.in_town_fee
-            : deliveryFeeSettings.out_of_town_fee)
+        ? (isInTown(orderForm.delivery_municipality, inTownMunicipality) ? deliveryFeeSettings.in_town_fee : deliveryFeeSettings.out_of_town_fee)
         : 0;
+    const feeLabel = deliveryFeeLabel(orderForm.delivery_municipality, inTownMunicipality);
     const grandTotal = total + deliveryFee;
 
-    return { total, subtotalExclVAT, vatAmount, deliveryFee, grandTotal };
+    return { total, subtotalExclVAT, vatAmount, deliveryFee, deliveryFeeLabel: feeLabel, grandTotal };
 }

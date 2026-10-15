@@ -7,8 +7,6 @@ import {
     Clock, 
     XCircle, 
     AlertCircle,
-    Video,
-    Eye,
     Calendar,
     Package,
     User,
@@ -22,6 +20,7 @@ import { type BreadcrumbItem } from '@/types';
 import { storageUrl } from '@/lib/storage-url';
 import InputError from '@/components/input-error';
 import PesoSign from '@/components/icons/peso-sign';
+import ReportEvidenceGallery from '@/components/report-evidence-gallery';
 
 interface ReportEvidence {
     id: number;
@@ -112,8 +111,6 @@ export default function CustomerReportDetails({ report }: CustomerReportDetailsP
         status: '',
         admin_notes: '',
         rejection_reason: '',
-        action_type: '',
-        refund_amount: '',
         resolution_notes: '',
     });
 
@@ -166,14 +163,6 @@ export default function CustomerReportDetails({ report }: CustomerReportDetailsP
             default:
                 return status;
         }
-    };
-
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     const handleStatusUpdate = (e: React.FormEvent) => {
@@ -230,275 +219,218 @@ export default function CustomerReportDetails({ report }: CustomerReportDetailsP
                             </span>
                             {report.action_type && (
                                 <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                                    {report.action_type === 'refund' ? 'Refund' : 'Replacement'}
+                                    {report.action_type === 'refund' ? 'Refund' : 'Change Item'}
                                 </span>
                             )}
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Customer & Order Information */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Customer & Order Information</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="flex items-center gap-3">
-                                    <User className="w-5 h-5 text-gray-400" />
-                                    <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Customer</p>
-                                        <p className="font-medium text-gray-900 dark:text-white">{report.customer.full_name}</p>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">{report.customer.email}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <FileText className="w-5 h-5 text-gray-400" />
-                                    <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Order Number</p>
-                                        <p className="font-medium text-gray-900 dark:text-white">#{report.order.order_id}</p>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {new Date(report.order.order_date).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <PesoSign className="w-5 h-5 text-gray-400" />
-                                    <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Order Amount</p>
-                                        <p className="font-medium text-gray-900 dark:text-white">
-                                            ₱{Number(report.order.total_amount).toFixed(2)}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <CheckCircle className="w-5 h-5 text-green-500" />
-                                    <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Order Status</p>
-                                        <p className="font-medium text-green-600 dark:text-green-400">Delivered</p>
-                                    </div>
+                {/* Every detail of the report in one container, section by section. */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md divide-y divide-gray-100 dark:divide-gray-700">
+                    {(canValidate || canResolve) && (
+                        <section className="p-6 flex flex-wrap gap-3">
+                            {canValidate && (
+                                <button
+                                    onClick={() => setShowValidationForm(true)}
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    <CheckSquare className="w-4 h-4" />
+                                    Review & Validate
+                                </button>
+                            )}
+                            {canResolve && (
+                                <button
+                                    onClick={() => setShowResolveForm(true)}
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                    <CheckSquare className="w-4 h-4" />
+                                    Mark as Resolved
+                                </button>
+                            )}
+                            {report.status === 'rejected' && canValidate && (
+                                <button
+                                    onClick={() => setShowValidationForm(true)}
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                    Reconsider Report
+                                </button>
+                            )}
+                        </section>
+                    )}
+
+                    <section className="p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Customer & Order Information</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3">
+                                <User className="w-5 h-5 text-gray-400" />
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Customer</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">{report.customer.full_name}</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">{report.customer.email}</p>
                                 </div>
                             </div>
-
-                            {report.order.order_items.length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1.5">
-                                        <Package className="w-4 h-4" />
-                                        Items Ordered
+                            <div className="flex items-center gap-3">
+                                <FileText className="w-5 h-5 text-gray-400" />
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Order Number</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">#{report.order.order_id}</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {new Date(report.order.order_date).toLocaleDateString()}
                                     </p>
-                                    <div className="space-y-1.5">
-                                        {report.order.order_items.map((item) => (
-                                            <div key={item.order_item_id} className="flex items-center justify-between text-sm">
-                                                <span className="text-gray-900 dark:text-white">
-                                                    {item.product?.product_name ?? 'Unknown Product'} × {Number(item.quantity)}
-                                                </span>
-                                                <span className="text-gray-600 dark:text-gray-400">
-                                                    ₱{Number(item.subtotal).toFixed(2)}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
                                 </div>
-                            )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <PesoSign className="w-5 h-5 text-gray-400" />
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Order Amount</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">
+                                        ₱{Number(report.order.total_amount).toFixed(2)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Order Status</p>
+                                    <p className="font-medium text-green-600 dark:text-green-400">Delivered</p>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Issue Description */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Issue Description</h2>
-                            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                                {report.description}
-                            </p>
-                        </div>
-
-                        {/* Evidence */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Evidence Files</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {report.evidence.map((file) => (
-                                    <div
-                                        key={file.id}
-                                        className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                                    >
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                {file.file_type === 'image' ? (
-                                                    <img
-                                                        src={storageUrl(file.file_path) ?? ''}
-                                                        alt={file.original_name}
-                                                        onClick={() => setSelectedMedia(file)}
-                                                        className="w-12 h-12 object-cover rounded cursor-pointer shrink-0"
-                                                    />
-                                                ) : (
-                                                    <Video className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
-                                                )}
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                                        {file.original_name}
-                                                    </p>
-                                                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                        {formatFileSize(file.file_size)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => setSelectedMedia(file)}
-                                                className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                                                file.file_type === 'image'
-                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                                                    : 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-                                            }`}>
-                                                {file.file_type === 'image' ? 'Image' : 'Video'}
+                        {report.order.order_items.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+                                    <Package className="w-4 h-4" />
+                                    Items Ordered
+                                </p>
+                                <div className="space-y-1.5">
+                                    {report.order.order_items.map((item) => (
+                                        <div key={item.order_item_id} className="flex items-center justify-between text-sm">
+                                            <span className="text-gray-900 dark:text-white">
+                                                {item.product?.product_name ?? 'Unknown Product'} × {Number(item.quantity)}
+                                            </span>
+                                            <span className="text-gray-600 dark:text-gray-400">
+                                                ₱{Number(item.subtotal).toFixed(2)}
                                             </span>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Actions */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions</h2>
-                            <div className="space-y-3">
-                                {canValidate && (
-                                    <button
-                                        onClick={() => setShowValidationForm(true)}
-                                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                    >
-                                        <CheckSquare className="w-4 h-4" />
-                                        Review & Validate
-                                    </button>
-                                )}
-                                {canResolve && (
-                                    <button
-                                        onClick={() => setShowResolveForm(true)}
-                                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                    >
-                                        <CheckSquare className="w-4 h-4" />
-                                        Mark as Resolved
-                                    </button>
-                                )}
-                                {report.status === 'rejected' && canValidate && (
-                                    <button
-                                        onClick={() => setShowValidationForm(true)}
-                                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                                    >
-                                        <RotateCcw className="w-4 h-4" />
-                                        Reconsider Report
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Status Timeline */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Status Timeline</h2>
-                            <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-gray-900 dark:text-white">Report Submitted</p>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {new Date(report.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
+                                    ))}
                                 </div>
-                                
-                                {report.reviewed_at && (
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center flex-shrink-0">
-                                            <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-gray-900 dark:text-white">Reviewed</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                {new Date(report.reviewed_at).toLocaleDateString()}
-                                            </p>
-                                            {report.reviewer && (
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                    by {report.reviewer.full_name}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
+                            </div>
+                        )}
+                    </section>
 
-                                {report.resolved_at && (
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-gray-900 dark:text-white">Resolved</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                {new Date(report.resolved_at).toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
+                    <section className="p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Issue Description</h2>
+                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                            {report.description}
+                        </p>
+                    </section>
+
+                    <section className="p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Evidence Files</h2>
+                        <ReportEvidenceGallery evidence={report.evidence} onOpen={setSelectedMedia} />
+                    </section>
+
+                    <section className="p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Status Timeline</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
+                                <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                                <p className="font-medium text-gray-900 dark:text-white">Report Submitted</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {new Date(report.created_at).toLocaleDateString()}
+                                </p>
                             </div>
                         </div>
-
-                        {/* Admin Actions */}
-                        {(report.admin_notes || report.rejection_reason || report.refund_amount) && (
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Admin Actions</h2>
-                                <div className="space-y-4">
-                                    {report.rejection_reason && (
-                                        <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                                            <div className="flex items-start gap-2">
-                                                <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
-                                                <div>
-                                                    <p className="font-medium text-red-700 dark:text-red-300">Rejection Reason</p>
-                                                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                                                        {report.rejection_reason}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {report.refund_amount && (
-                                        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                                            <div className="flex items-start gap-2">
-                                                <PesoSign className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
-                                                <div>
-                                                    <p className="font-medium text-green-700 dark:text-green-300">Refund Amount</p>
-                                                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                                                        ₱{Number(report.refund_amount).toFixed(2)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {report.admin_notes && (
-                                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                            <div className="flex items-start gap-2">
-                                                <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-                                                <div>
-                                                    <p className="font-medium text-blue-700 dark:text-blue-300">Admin Notes</p>
-                                                    <p className="text-sm text-blue-600 dark:text-blue-400 mt-1 whitespace-pre-wrap">
-                                                        {report.admin_notes}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                
+                        {report.reviewed_at && (
+                            <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                                </div>
+                                <div>
+                                    <p className="font-medium text-gray-900 dark:text-white">Reviewed</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {new Date(report.reviewed_at).toLocaleDateString()}
+                                    </p>
+                                    {report.reviewer && (
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            by {report.reviewer.full_name}
+                                        </p>
                                     )}
                                 </div>
                             </div>
                         )}
-                    </div>
+
+                        {report.resolved_at && (
+                            <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                    <p className="font-medium text-gray-900 dark:text-white">Resolved</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {new Date(report.resolved_at).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        </div>
+                    </section>
+
+                    {(report.admin_notes || report.rejection_reason || report.refund_amount) && (
+                        <section className="p-6">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Admin Response</h2>
+                            <div className="space-y-4">
+                                {report.rejection_reason && (
+                                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                        <div className="flex items-start gap-2">
+                                            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                                            <div>
+                                                <p className="font-medium text-red-700 dark:text-red-300">Rejection Reason</p>
+                                                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                                                    {report.rejection_reason}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {report.refund_amount && (
+                                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                                        <div className="flex items-start gap-2">
+                                            <PesoSign className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                                            <div>
+                                                <p className="font-medium text-green-700 dark:text-green-300">Refund Amount</p>
+                                                <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                                                    ₱{Number(report.refund_amount).toFixed(2)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {report.admin_notes && (
+                                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                        <div className="flex items-start gap-2">
+                                            <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                                            <div>
+                                                <p className="font-medium text-blue-700 dark:text-blue-300">Admin Notes</p>
+                                                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1 whitespace-pre-wrap">
+                                                    {report.admin_notes}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    )}
                 </div>
 
                 {/* Validation Form Modal */}
@@ -552,47 +484,10 @@ export default function CustomerReportDetails({ report }: CustomerReportDetailsP
                                     )}
 
                                     {data.status === 'validated' && (
-                                        <>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Action Type *
-                                                </label>
-                                                <select
-                                                    value={data.action_type}
-                                                    onChange={(e) => setData('action_type', e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                                    required
-                                                >
-                                                    <option value="">Select Action</option>
-                                                    <option value="refund">Issue Refund</option>
-                                                    <option value="replacement">Issue Replacement</option>
-                                                </select>
-                                                <InputError message={errors.action_type} />
-                                            </div>
-
-                                            {data.action_type === 'refund' && (
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                        Refund Amount (₱) *
-                                                        <span className="font-normal text-gray-500 dark:text-gray-400">
-                                                            {' '}(max ₱{Number(report.order.total_amount).toFixed(2)}, the order total)
-                                                        </span>
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        max={Number(report.order.total_amount)}
-                                                        value={data.refund_amount}
-                                                        onChange={(e) => setData('refund_amount', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                                        placeholder="0.00"
-                                                        required
-                                                    />
-                                                    <InputError message={errors.refund_amount} />
-                                                </div>
-                                            )}
-                                        </>
+                                        <div className="p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-sm text-indigo-800 dark:text-indigo-200">
+                                            <p className="font-medium">Action: Change Item</p>
+                                            <p className="mt-1">A valid report is settled by changing the damaged item. Refunds are not given.</p>
+                                        </div>
                                     )}
 
                                     <div>
